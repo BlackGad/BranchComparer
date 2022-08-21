@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<Product>Git Branch Comparer</Product>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NLog" Version="5.0.2" />
+		<PackageReference Include="PS.IoC.Autofac" Version="2.9.4" />
+		<PackageReference Include="PS.WPF" Version="2.9.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\BranchComparer.Azure\BranchComparer.Azure.csproj" />
+	  <ProjectReference Include="..\BranchComparer.Git\BranchComparer.Git.csproj" />
+	  <ProjectReference Include="..\BranchComparer.Infrastructure\BranchComparer.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="NLog.config">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

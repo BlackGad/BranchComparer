@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="NLog" Version="5.0.2" />
+		<PackageReference Include="PS.IoC.Autofac" Version="2.9.4" />
+		<PackageReference Include="LibGit2Sharp" Version="0.26.2" />
+		<PackageReference Include="PS.Windows.Interop" Version="2.9.4" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BranchComparer.Infrastructure\BranchComparer.Infrastructure.csproj" />
+	</ItemGroup>
+</Project>

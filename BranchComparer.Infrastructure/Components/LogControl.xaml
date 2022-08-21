@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:BranchComparer.Infrastructure.Components">
+
+    <DataTemplate x:Key="{x:Static controls:LogControl+Resource.ItemTemplate}">
+        <TextBox BorderThickness="0"
+                 IsReadOnly="True"
+                 Text="{Binding Mode=OneWay}" />
+    </DataTemplate>
+
+    <ControlTemplate x:Key="{x:Static controls:LogControl+Resource.ControlTemplate}" TargetType="controls:LogControl">
+        <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto">
+            <ItemsPresenter />
+        </ScrollViewer>
+    </ControlTemplate>
+
+    <ItemsPanelTemplate x:Key="{x:Static controls:LogControl+Resource.PanelTemplate}">
+        <VirtualizingStackPanel IsItemsHost="True" />
+    </ItemsPanelTemplate>
+
+    <Style x:Key="{x:Static controls:LogControl+Resource.ControlStyle}" TargetType="controls:LogControl">
+        <Setter Property="ItemTemplate" Value="{StaticResource {x:Static controls:LogControl+Resource.ItemTemplate}}" />
+        <Setter Property="ItemsPanel" Value="{StaticResource {x:Static controls:LogControl+Resource.PanelTemplate}}" />
+        <Setter Property="Template" Value="{StaticResource {x:Static controls:LogControl+Resource.ControlTemplate}}" />
+    </Style>
+
+</ResourceDictionary>

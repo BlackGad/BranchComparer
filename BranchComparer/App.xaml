@@ -1,0 +1,15 @@
+﻿<Application x:Class="BranchComparer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/PS.WPF;component/Styles/Button.Apply.xaml" />
+                <ResourceDictionary Source="/PS.WPF;component/Styles/CheckBox.Apply.xaml" />
+                <ResourceDictionary Source="/PS.WPF;component/Styles/ComboBox.Apply.xaml" />
+                <ResourceDictionary Source="/PS.WPF;component/Styles/Menu.Apply.xaml" />
+                <ResourceDictionary Source="/PS.WPF;component/Styles/ToggleButton.Apply.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

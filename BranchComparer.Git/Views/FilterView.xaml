@@ -1,0 +1,43 @@
+﻿<ps:GroupExpander x:Class="BranchComparer.Git.Views.FilterView"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                  xmlns:ps="http://schemas.ps.com/2019/xaml"
+                  xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                  xmlns:viewModels="clr-namespace:BranchComparer.Git.ViewModels"
+                  d:DataContext="{d:DesignInstance viewModels:FilterViewModel}"
+                  Focusable="False"
+                  Header="Filter"
+                  IsExpanded="{Binding IsExpanded}"
+                  ShowIndent="False"
+                  mc:Ignorable="d">
+    <StackPanel ps:HeaderedContent.HeaderColumnWidth="150" ps:HeaderedContent.IsResizable="False">
+        <ps:HeaderedContent Header="Period">
+            <ComboBox DisplayMemberPath="Title"
+                      SelectedValue="{Binding GitService.Settings.Period, Mode=TwoWay}"
+                      SelectedValuePath="Payload">
+                <ps:TitledObject Title="1 Day">
+                    <ps:TitledObject.Payload>
+                        <system:TimeSpan>1.00:00:00.0000000</system:TimeSpan>
+                    </ps:TitledObject.Payload>
+                </ps:TitledObject>
+                <ps:TitledObject Title="1 Week">
+                    <ps:TitledObject.Payload>
+                        <system:TimeSpan>7.00:00:00.0000000</system:TimeSpan>
+                    </ps:TitledObject.Payload>
+                </ps:TitledObject>
+                <ps:TitledObject Title="1 Month">
+                    <ps:TitledObject.Payload>
+                        <system:TimeSpan>30.00:00:00.0000000</system:TimeSpan>
+                    </ps:TitledObject.Payload>
+                </ps:TitledObject>
+                <ps:TitledObject Title="Any time" Payload="{x:Null}" />
+            </ComboBox>
+        </ps:HeaderedContent>
+        <ps:HeaderedContent Header="Show unique commits">
+            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding GitService.Settings.ShowUniqueCommits}" />
+        </ps:HeaderedContent>
+        <Separator />
+    </StackPanel>
+</ps:GroupExpander>

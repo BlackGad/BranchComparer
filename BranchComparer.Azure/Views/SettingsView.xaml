@@ -1,0 +1,45 @@
+﻿<ps:GroupExpander x:Class="BranchComparer.Azure.Views.SettingsView"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                  xmlns:ps="http://schemas.ps.com/2019/xaml"
+                  xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
+                  xmlns:viewModels="clr-namespace:BranchComparer.Azure.ViewModels"
+                  d:DataContext="{d:DesignInstance viewModels:SettingsViewModel}"
+                  Header="Azure"
+                  IsExpanded="{Binding IsExpanded}"
+                  ShowIndent="False"
+                  mc:Ignorable="d">
+    <ps:GroupExpander.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/Icons.xaml" />
+                <ResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/XamlResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ps:GroupExpander.Resources>
+    <StackPanel Margin="0,0,0,5">
+        <ps:HeaderedContent Header="Project">
+            <ps:TextBox IsSideButtonVisible="True" Value="{Binding AzureService.Settings.Project}" />
+        </ps:HeaderedContent>
+        <ps:HeaderedContent Header="Secret">
+            <ps:PasswordBox IsSideButtonVisible="True" Value="{Binding AzureService.Settings.Secret}" />
+        </ps:HeaderedContent>
+        <ps:HeaderedContent Header="Cache directory">
+            <ps:TextBox IsSideButtonVisible="True"
+                        SideButtonCommand="{Binding BrowseAzureCacheDirectoryCommand}"
+                        SideButtonGeometry="{StaticResource {x:Static resources:Icons.FileSelectGeometry}}"
+                        Value="{Binding AzureService.Settings.CacheDirectory}" />
+        </ps:HeaderedContent>
+        <ps:HeaderedContent Header="State">
+            <StackPanel Orientation="Horizontal">
+                <ps:Button Width="150"
+                           Background="{Binding Path=AzureService.State.StateType, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
+                           Command="{Binding InvalidateAzureSettingsCommand}"
+                           Content="{Binding AzureService.State.StateType}"
+                           ToolTip="{Binding AzureService.State.Description}" />
+            </StackPanel>
+        </ps:HeaderedContent>
+    </StackPanel>
+</ps:GroupExpander>
