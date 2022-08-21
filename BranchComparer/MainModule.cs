@@ -1,6 +1,8 @@
-﻿using Autofac;
+﻿using System.Windows;
+using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
+using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.ViewModels;
 using BranchComparer.ViewModels;
 using BranchComparer.Views;
@@ -16,6 +18,18 @@ public class MainModule : Module
     protected override void AttachToComponentRegistration(IComponentRegistryBuilder componentRegistry, IComponentRegistration registration)
     {
         registration.HandleActivation<IViewResolverService>(ViewResolverServiceActivation);
+        registration.HandleActivation<IModelResolverService>(ModelResolverServiceActivation);
+    }
+
+    private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
+    {
+        service.Object(Regions.LEFT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
+            TypedParameter.From(Regions.LEFT_BRANCH),
+            TypedParameter.From(FlowDirection.LeftToRight));
+
+        service.Object(Regions.RIGHT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
+            TypedParameter.From(Regions.RIGHT_BRANCH),
+            TypedParameter.From(FlowDirection.RightToLeft));
     }
 
     protected override void Load(ContainerBuilder builder)
@@ -38,5 +52,8 @@ public class MainModule : Module
                .Associate<ConfirmationViewModel>(
                    template: scope.Resolve<IDataTemplate<NotificationView>>(),
                    style: Infrastructure.Resources.XamlResources.ConfirmationStyle);
+
+        service.AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
+               .AssociateTemplate<CommitsViewModel>(scope.Resolve<IDataTemplate<CommitsView>>());
     }
 }

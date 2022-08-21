@@ -1,8 +1,8 @@
-﻿using BranchComparer.Git.ViewModels;
+﻿using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
 
-namespace BranchComparer.Git.Views;
+namespace BranchComparer.Views;
 
 [DependencyRegisterAsSelf]
 [DependencyRegisterAsInterface(typeof(IView<CommitsViewModel>))]

@@ -21,6 +21,8 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
     {
         GitService = gitService;
 
+        _isExpanded = true;
+
         BrowseGitRepositoryFolderCommand = new RelayUICommand(BrowseGitRepositoryFolder);
         InvalidateGitSettingsCommand = new RelayUICommand(InvalidateGitSettings);
 
@@ -33,6 +35,7 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
 
     public RelayUICommand InvalidateGitSettingsCommand { get; }
 
+    [JsonProperty]
     public bool IsExpanded
     {
         get { return _isExpanded; }

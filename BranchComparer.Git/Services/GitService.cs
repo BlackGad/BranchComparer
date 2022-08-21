@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.Abstract;
+using BranchComparer.Infrastructure.Services.Abstract.ServiceSettingsState;
 using BranchComparer.Infrastructure.Services.GitService;
 using LibGit2Sharp;
 using PS.Extensions;
@@ -65,6 +66,11 @@ internal class GitService : AbstractService<GitSettings>,
 
     public IReadOnlyList<Commit> GetCommitsFor(string tag)
     {
+        if (State.StateType != SettingsStateType.Valid)
+        {
+            throw new InvalidOperationException("Git service settings is note valid");
+        }
+
         if (!_usedBranches.TryGetValue(tag, out var branchName))
         {
             throw new InvalidOperationException("Branch name not set");

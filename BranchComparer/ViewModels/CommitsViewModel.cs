@@ -1,8 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using Autofac;
 using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.Abstract.ServiceSettingsState;
 using BranchComparer.Infrastructure.Services.GitService;
-using BranchComparer.Infrastructure.Services.ViewModelsService;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -10,7 +12,7 @@ using PS.MVVM.Patterns;
 using PS.Threading.ThrottlingTrigger;
 using PS.WPF.Extensions;
 
-namespace BranchComparer.Git.ViewModels;
+namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
 [JsonObject(MemberSerialization.OptIn)]
@@ -18,9 +20,9 @@ public class CommitsViewModel : BaseNotifyPropertyChanged,
                                 IDisposable,
                                 IViewModel
 {
+    private readonly ILifetimeScope _scope;
     private readonly ThrottlingTrigger _settingsChangedTrigger;
     private readonly string _tag;
-    private readonly IViewModelsService _viewModelsService;
     private string _branch;
     private IReadOnlyList<CommitViewModel> _commits;
     private string _error;
@@ -29,10 +31,10 @@ public class CommitsViewModel : BaseNotifyPropertyChanged,
                             FlowDirection flowDirection,
                             ISettingsService settingsService,
                             IGitService gitService,
-                            IViewModelsService viewModelsService)
+                            ILifetimeScope scope)
     {
         _tag = tag;
-        _viewModelsService = viewModelsService;
+        _scope = scope;
 
         FlowDirection = flowDirection;
         GitService = gitService;
@@ -94,20 +96,19 @@ public class CommitsViewModel : BaseNotifyPropertyChanged,
 
     private void OnSettingsChangedTriggered(object sender, EventArgs e)
     {
-        if (GitService.State.StateType != SettingsStateType.Valid)
-        {
-            return;
-        }
-
         try
         {
             var commits = GitService.GetCommitsFor(_tag);
-            //Commits = _viewModelsService.CreateViewModels(_tag, commits);
-            //Commits = commits.Select(commit => _scope.Resolve<SingleCommitViewModel>(TypedParameter.From(commit))).ToList();
+            Commits = commits.Select(CreateCommitViewModel).ToList();
         }
         catch (Exception exception)
         {
             Error = exception.GetBaseException().Message;
         }
+    }
+
+    private CommitViewModel CreateCommitViewModel(Commit commit)
+    {
+        return _scope.Resolve<CommitViewModel>(TypedParameter.From(commit), TypedParameter.From(FlowDirection));
     }
 }

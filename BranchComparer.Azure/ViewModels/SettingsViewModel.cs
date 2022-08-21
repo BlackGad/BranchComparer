@@ -12,14 +12,16 @@ namespace BranchComparer.Azure.ViewModels;
 [DependencyRegisterAsSelf]
 [JsonObject(MemberSerialization.OptIn)]
 public class SettingsViewModel : BaseNotifyPropertyChanged,
-                                      IViewModel
+                                 IViewModel
 {
     private bool _isExpanded;
 
     public SettingsViewModel(ISettingsService settingsService,
-                                  IAzureService azureService)
+                             IAzureService azureService)
     {
         AzureService = azureService;
+
+        _isExpanded = true;
 
         BrowseAzureCacheDirectoryCommand = new RelayUICommand(BrowseAzureCacheDirectory);
         InvalidateAzureSettingsCommand = new RelayUICommand(InvalidateAzureSettings);

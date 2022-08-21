@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using Autofac;
+﻿using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
 using BranchComparer.Git.ViewModels;
@@ -29,22 +28,12 @@ public class GitModule : Module
     {
         service.Object(Regions.FILTER).Value = scope.Resolve<FilterViewModel>();
 
-        service.Object(Regions.LEFT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
-            TypedParameter.From(Regions.LEFT_BRANCH),
-            TypedParameter.From(FlowDirection.LeftToRight));
-
-        service.Object(Regions.RIGHT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
-            TypedParameter.From(Regions.RIGHT_BRANCH),
-            TypedParameter.From(FlowDirection.RightToLeft));
-
         service.Collection(Regions.SETTINGS).Add(scope.Resolve<SettingsViewModel>());
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
     {
-        service.AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
-               .AssociateTemplate<CommitsViewModel>(scope.Resolve<IDataTemplate<CommitsView>>())
-               .AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
+        service.AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
                .AssociateTemplate<SettingsViewModel>(scope.Resolve<IDataTemplate<SettingsView>>());
     }
 }
