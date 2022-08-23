@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 using NLog;
+using PS.ComponentModel.DeepTracker;
+using PS.ComponentModel.Navigation;
+using PS.ComponentModel.Navigation.Extensions;
 using PS.IoC.Attributes;
+using PS.MVVM.Services;
 
 namespace BranchComparer.Services;
 
@@ -27,24 +34,78 @@ internal class SettingsService : ISettingsService,
         return hash;
     }
 
+    private readonly IBroadcastService _broadcastService;
     private readonly ILogger _logger;
     private readonly ConcurrentDictionary<string, object> _saveOnDispose;
+    private readonly ObservableCollection<object> _settings;
+    private readonly DeepTracker _settingsTracker;
 
-    public SettingsService()
+    public SettingsService(IBroadcastService broadcastService)
     {
+        _broadcastService = broadcastService;
         _logger = LogManager.GetCurrentClassLogger();
         _saveOnDispose = new ConcurrentDictionary<string, object>();
+        _settings = new ObservableCollection<object>();
+
+        _settingsTracker = DeepTracker.Setup(_settings)
+                                      .Subscribe<ChangedPropertyEventArgs>(OnSettingsChanged)
+                                      .Create()
+                                      .Activate();
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
+        _settingsTracker.Dispose();
+
         foreach (var pair in _saveOnDispose.ToList())
         {
             Save(pair.Key, pair.Value);
         }
     }
 
-    public bool Load(string key, object item)
+    public T GetObservableSettings<T>()
+        where T : INotifyPropertyChanged, ICloneable
+    {
+        lock (_settings)
+        {
+            var existing = _settings.OfType<T>().FirstOrDefault();
+            if (existing == null)
+            {
+                existing = Activator.CreateInstance<T>();
+                LoadPopulateAndSaveOnDispose(typeof(T).AssemblyQualifiedName, existing);
+                _settings.Add(existing);
+            }
+
+            return existing;
+        }
+    }
+
+    public T GetSettings<T>()
+        where T : INotifyPropertyChanged, ICloneable
+    {
+        return (T)GetObservableSettings<T>().Clone();
+    }
+
+    public void LoadPopulateAndSaveOnDispose(string key, object item)
+    {
+        Load(key, item);
+        _saveOnDispose.TryAdd(key, item);
+    }
+
+    private void OnSettingsChanged(object sender, ChangedPropertyEventArgs e)
+    {
+        var owner = (DeepTracker)sender;
+        if (owner.GetObject(e.Route.Select(Routes.Wildcard)) is not ICloneable root)
+        {
+            return;
+        }
+
+        var eventType = typeof(SettingsChangedArgs<>).MakeGenericType(root.GetType());
+        var args = Activator.CreateInstance(eventType, root.Clone());
+        _broadcastService.Broadcast(eventType, args);
+    }
+
+    private void Load(string key, object item)
     {
         try
         {
@@ -58,25 +119,15 @@ internal class SettingsService : ISettingsService,
 
                 var json = reader.ReadToEnd();
                 JsonConvert.PopulateObject(json, item);
-
-                return true;
             }
         }
         catch (Exception e)
         {
             _logger.Warn(e, $"Cannot load settings for '{key}'");
         }
-
-        return false;
     }
 
-    public void LoadPopulateAndSaveOnDispose(string key, object item)
-    {
-        Load(key, item);
-        _saveOnDispose.TryAdd(key, item);
-    }
-
-    public bool Save(string key, object item)
+    private void Save(string key, object item)
     {
         try
         {
@@ -88,14 +139,10 @@ internal class SettingsService : ISettingsService,
 
             var json = JsonConvert.SerializeObject(item);
             writer.Write(json);
-
-            return true;
         }
         catch (Exception e)
         {
             _logger.Warn(e, $"Cannot save settings for '{key}'");
         }
-
-        return false;
     }
 }

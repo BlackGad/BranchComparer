@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
       xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
       xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
       d:DataContext="{d:DesignInstance viewModels:CommitViewModel}"
@@ -38,12 +39,22 @@
         </TextBlock>
     </Border>
 
+    <ItemsControl ItemTemplateSelector="{mvvm:TemplateResolver}" ItemsSource="{Binding RelatedItems}" Grid.Column="1">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+    </ItemsControl>
+
+    <!--
     <Border Grid.Column="1"
             Background="{theme:Brush MainBorderDeep}"
             BorderBrush="{theme:Brush MainBorder}"
             BorderThickness="1"
             CornerRadius="2"
             Focusable="False">
+       
         <TextBlock Margin="2"
                    Foreground="{theme:Brush Main}"
                    FontSize="{theme:FontSize S}"
@@ -61,6 +72,7 @@
             </TextBlock.ToolTip>
         </TextBlock>
     </Border>
+    -->
 
     <Border Grid.Column="2"
             Background="{theme:Brush MainBorderDeep}"

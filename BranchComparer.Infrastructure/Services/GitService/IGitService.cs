@@ -1,12 +1,10 @@
-﻿using BranchComparer.Infrastructure.Services.Abstract;
+﻿namespace BranchComparer.Infrastructure.Services.GitService;
 
-namespace BranchComparer.Infrastructure.Services.GitService;
-
-public interface IGitService : IAbstractService<GitSettings>
+public interface IGitService
 {
-    IReadOnlyList<string> AvailableBranches { get; }
+    IReadOnlyList<string> GetAvailableBranches();
 
-    IReadOnlyList<Commit> GetCommitsFor(string tag);
+    IReadOnlyList<Commit> GetCommits(string includeReachableFromBranchName, string excludeReachableFromBranchName);
 
-    void RegisterBranchUsage(string tag, string branchName);
+    void InvalidateSettings();
 }

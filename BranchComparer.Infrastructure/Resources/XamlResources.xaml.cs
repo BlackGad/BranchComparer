@@ -17,4 +17,5 @@ public static class XamlResources
                                          resourceDictionary: Default);
 
     public static readonly ResourceDescriptor ServiceStateColorConverter = ResourceDescriptor.Create<IValueConverter>(Default);
+    public static readonly ResourceDescriptor ServiceStateTitleConverter = ResourceDescriptor.Create<IValueConverter>(Default);
 }

@@ -1,5 +1,5 @@
-﻿using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.AzureService;
+﻿using BranchComparer.Azure.Services.AzureService;
+using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -16,8 +16,7 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
 {
     private bool _isExpanded;
 
-    public SettingsViewModel(ISettingsService settingsService,
-                             IAzureService azureService)
+    public SettingsViewModel(ISettingsService settingsService, AzureService azureService)
     {
         AzureService = azureService;
 
@@ -27,9 +26,10 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         InvalidateAzureSettingsCommand = new RelayUICommand(InvalidateAzureSettings);
 
         settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
+        Settings = settingsService.GetObservableSettings<AzureSettings>();
     }
 
-    public IAzureService AzureService { get; }
+    public AzureService AzureService { get; }
 
     public RelayUICommand BrowseAzureCacheDirectoryCommand { get; }
 
@@ -42,17 +42,19 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         set { SetField(ref _isExpanded, value); }
     }
 
+    public AzureSettings Settings { get; }
+
     private void BrowseAzureCacheDirectory()
     {
         var dialog = new OpenFolderDialog
         {
             DefaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            InitialFolder = AzureService.Settings.CacheDirectory
+            InitialFolder = Settings.CacheDirectory
         };
 
         if (dialog.ShowDialog())
         {
-            AzureService.Settings.CacheDirectory = dialog.SelectedFolder;
+            Settings.CacheDirectory = dialog.SelectedFolder;
         }
     }
 

@@ -26,14 +26,14 @@
             <ps:TextBox IsSideButtonVisible="True"
                         SideButtonCommand="{Binding BrowseGitRepositoryFolderCommand}"
                         SideButtonGeometry="{StaticResource {x:Static resources:Icons.FileSelectGeometry}}"
-                        Value="{Binding GitService.Settings.RepositoryDirectory}" />
+                        Value="{Binding Settings.RepositoryDirectory}" />
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="State">
             <StackPanel Orientation="Horizontal">
                 <ps:Button Width="150"
-                           Background="{Binding Path=GitService.State.StateType, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
+                           Background="{Binding Path=GitService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
                            Command="{Binding InvalidateGitSettingsCommand}"
-                           Content="{Binding GitService.State.StateType}"
+                           Content="{Binding Path=GitService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateTitleConverter}}}"
                            ToolTip="{Binding GitService.State.Description}" />
             </StackPanel>
         </ps:HeaderedContent>

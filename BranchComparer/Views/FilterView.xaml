@@ -1,12 +1,12 @@
-﻿<ps:GroupExpander x:Class="BranchComparer.Git.Views.FilterView"
+﻿<ps:GroupExpander x:Class="BranchComparer.Views.FilterView"
                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                   xmlns:ps="http://schemas.ps.com/2019/xaml"
                   xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                  xmlns:viewModels="clr-namespace:BranchComparer.Git.ViewModels"
-                  d:DataContext="{d:DesignInstance viewModels:FilterViewModel}"
+                  xmlns:viewModels1="clr-namespace:BranchComparer.ViewModels"
+                  d:DataContext="{d:DesignInstance viewModels1:FilterViewModel}"
                   Focusable="False"
                   Header="Filter"
                   IsExpanded="{Binding IsExpanded}"
@@ -15,7 +15,7 @@
     <StackPanel ps:HeaderedContent.HeaderColumnWidth="150" ps:HeaderedContent.IsResizable="False">
         <ps:HeaderedContent Header="Period">
             <ComboBox DisplayMemberPath="Title"
-                      SelectedValue="{Binding GitService.Settings.Period, Mode=TwoWay}"
+                      SelectedValue="{Binding EnvironmentService.Period, Mode=TwoWay}"
                       SelectedValuePath="Payload">
                 <ps:TitledObject Title="1 Day">
                     <ps:TitledObject.Payload>
@@ -36,7 +36,7 @@
             </ComboBox>
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="Show unique commits">
-            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding GitService.Settings.ShowUniqueCommits}" />
+            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding EnvironmentService.ShowUniqueCommits}" />
         </ps:HeaderedContent>
         <Separator />
     </StackPanel>

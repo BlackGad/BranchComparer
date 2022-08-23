@@ -5,25 +5,17 @@ using BranchComparer.Infrastructure.Services.AzureService;
 using BranchComparer.Infrastructure.Services.GitService;
 using PS;
 using PS.IoC.Attributes;
-using PS.MVVM.Patterns.Aware;
-using PS.MVVM.Services;
 
 namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
-public class CommitViewModel : BaseNotifyPropertyChanged,
-                               IUnloadedAware,
-                               ILoadedAware
+public class CommitViewModel : BaseNotifyPropertyChanged
 {
     private readonly IAzureService _azureService;
-    private readonly IBroadcastService _broadcastService;
-    private readonly Commit _commit;
 
-    public CommitViewModel(Commit commit, IAzureService azureService, IBroadcastService broadcastService)
+    public CommitViewModel(Commit commit, IAzureService azureService)
     {
-        _commit = commit;
         _azureService = azureService;
-        _broadcastService = broadcastService;
 
         ShortMessage = commit.MessageShort;
         DetailedMessage = commit.Message.Trim('\r', '\n', '\t', ' ');
@@ -37,29 +29,18 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
 
         RelatedItems = Regex.Matches(commit.Message, @"#([0-9]+)")
                             .Where(m => m.Success)
-                            .Select(m => m.Groups[1].Value)
+                            .Select(m => int.TryParse(m.Groups[1].Value, out var parsed) ? parsed : int.MaxValue)
+                            .Where(v => v != int.MaxValue)
                             .Distinct()
+                            .Select(id => new AzureItem() { Id = id })
                             .ToList();
-
-        RelatedItemsMessage = string.Join(" ", RelatedItems);
     }
 
     public string DetailedMessage { get; }
 
     public string MergedPR { get; }
 
-    public IReadOnlyList<string> RelatedItems { get; }
-
-    public string RelatedItemsMessage { get; }
+    public IReadOnlyList<AzureItem> RelatedItems { get; }
 
     public string ShortMessage { get; }
-
-    public void Loaded()
-    {
-        _
-    }
-
-    public void Unloaded()
-    {
-    }
 }

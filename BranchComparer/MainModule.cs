@@ -21,17 +21,6 @@ public class MainModule : Module
         registration.HandleActivation<IModelResolverService>(ModelResolverServiceActivation);
     }
 
-    private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
-    {
-        service.Object(Regions.LEFT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
-            TypedParameter.From(Regions.LEFT_BRANCH),
-            TypedParameter.From(FlowDirection.LeftToRight));
-
-        service.Object(Regions.RIGHT_BRANCH).Value = scope.Resolve<CommitsViewModel>(
-            TypedParameter.From(Regions.RIGHT_BRANCH),
-            TypedParameter.From(FlowDirection.RightToLeft));
-    }
-
     protected override void Load(ContainerBuilder builder)
     {
         builder.RegisterAssemblyTypesWithAttributes(ThisAssembly);
@@ -39,6 +28,13 @@ public class MainModule : Module
         builder.RegisterType<NotificationView>();
         builder.RegisterType<NotificationViewModel>();
         builder.RegisterType<ConfirmationViewModel>();
+    }
+
+    private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
+    {
+        service.Object(Regions.FILTER).Value = scope.Resolve<FilterViewModel>();
+        service.Object(Regions.LEFT_BRANCH).Value = scope.Resolve<CommitsViewModel>(TypedParameter.From(FlowDirection.LeftToRight));
+        service.Object(Regions.RIGHT_BRANCH).Value = scope.Resolve<CommitsViewModel>(TypedParameter.From(FlowDirection.RightToLeft));
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
@@ -54,6 +50,7 @@ public class MainModule : Module
                    style: Infrastructure.Resources.XamlResources.ConfirmationStyle);
 
         service.AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
-               .AssociateTemplate<CommitsViewModel>(scope.Resolve<IDataTemplate<CommitsView>>());
+               .AssociateTemplate<CommitsViewModel>(scope.Resolve<IDataTemplate<CommitsView>>())
+               .AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>());
     }
 }

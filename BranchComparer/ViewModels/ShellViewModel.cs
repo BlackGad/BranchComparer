@@ -11,14 +11,17 @@ public class ShellViewModel : BaseNotifyPropertyChanged,
                               ITitleAware,
                               IViewModel
 {
-    public ShellViewModel(IBusyService busyService)
+    public ShellViewModel(IBusyService busyService, IEnvironmentService environmentService)
     {
         BusyService = busyService;
+        EnvironmentService = environmentService;
 
         Title = App.GetApplicationTitle();
     }
 
     public IBusyService BusyService { get; }
+
+    public IEnvironmentService EnvironmentService { get; }
 
     public string Title { get; }
 }

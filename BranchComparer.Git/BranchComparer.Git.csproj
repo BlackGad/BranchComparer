@@ -6,9 +6,9 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="NLog" Version="5.0.2" />
-		<PackageReference Include="PS.IoC.Autofac" Version="2.9.4" />
+		<PackageReference Include="PS.IoC.Autofac" Version="2.9.5" />
 		<PackageReference Include="LibGit2Sharp" Version="0.26.2" />
-		<PackageReference Include="PS.Windows.Interop" Version="2.9.4" />
+		<PackageReference Include="PS.Windows.Interop" Version="2.9.5" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\BranchComparer.Infrastructure\BranchComparer.Infrastructure.csproj" />

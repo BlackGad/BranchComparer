@@ -1,5 +1,5 @@
-﻿using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.GitService;
+﻿using BranchComparer.Git.Services.GitService;
+using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -12,12 +12,11 @@ namespace BranchComparer.Git.ViewModels;
 [DependencyRegisterAsSelf]
 [JsonObject(MemberSerialization.OptIn)]
 public class SettingsViewModel : BaseNotifyPropertyChanged,
-                                    IViewModel
+                                 IViewModel
 {
     private bool _isExpanded;
 
-    public SettingsViewModel(ISettingsService settingsService,
-                                IGitService gitService)
+    public SettingsViewModel(ISettingsService settingsService, GitService gitService)
     {
         GitService = gitService;
 
@@ -27,11 +26,12 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         InvalidateGitSettingsCommand = new RelayUICommand(InvalidateGitSettings);
 
         settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
+        Settings = settingsService.GetObservableSettings<GitSettings>();
     }
 
     public RelayUICommand BrowseGitRepositoryFolderCommand { get; }
 
-    public IGitService GitService { get; }
+    public GitService GitService { get; }
 
     public RelayUICommand InvalidateGitSettingsCommand { get; }
 
@@ -42,17 +42,19 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         set { SetField(ref _isExpanded, value); }
     }
 
+    public GitSettings Settings { get; }
+
     private void BrowseGitRepositoryFolder()
     {
         var dialog = new OpenFolderDialog
         {
             DefaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            InitialFolder = GitService.Settings.RepositoryDirectory
+            InitialFolder = Settings.RepositoryDirectory
         };
 
         if (dialog.ShowDialog())
         {
-            GitService.Settings.RepositoryDirectory = dialog.SelectedFolder;
+            Settings.RepositoryDirectory = dialog.SelectedFolder;
         }
     }
 

@@ -1,12 +1,10 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:aware="clr-namespace:PS.Patterns.Aware;assembly=PS.Primitives"
-                    xmlns:infrastructure="clr-namespace:BranchComparer.Infrastructure"
                     xmlns:m="http://schemas.ps.com/2019/xaml/markup"
-                    xmlns:switch="http://schemas.ps.com/2019/xaml/switchvalueconverter"
-                    xmlns:valueConverters="http://schemas.ps.com/2019/xaml"
                     xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources"
-                    xmlns:serviceSettingsState="clr-namespace:BranchComparer.Infrastructure.Services.Abstract.ServiceSettingsState">
+                    xmlns:switch="http://schemas.ps.com/2019/xaml/switchvalueconverter"
+                    xmlns:valueConverters="http://schemas.ps.com/2019/xaml">
     <Style x:Key="{x:Static resources:XamlResources.NotificationStyle}" TargetType="valueConverters:Window">
         <Setter Property="Commands">
             <Setter.Value>
@@ -56,33 +54,20 @@
         <valueConverters:SwitchValueConverter.ConvertDefault>
             <SolidColorBrush Color="DarkGray" />
         </valueConverters:SwitchValueConverter.ConvertDefault>
-
-        <switch:EqualTo>
+        <switch:EqualTo Value="{m:Boolean True}">
             <switch:EqualTo.Result>
                 <SolidColorBrush Color="Green" />
             </switch:EqualTo.Result>
-            <switch:EqualTo.Value>
-                <serviceSettingsState:SettingsStateType>Valid</serviceSettingsState:SettingsStateType>
-            </switch:EqualTo.Value>
         </switch:EqualTo>
-
-        <switch:EqualTo>
+        <switch:EqualTo Value="{m:Boolean False}">
             <switch:EqualTo.Result>
                 <SolidColorBrush Color="Red" />
             </switch:EqualTo.Result>
-            <switch:EqualTo.Value>
-                <serviceSettingsState:SettingsStateType>Invalid</serviceSettingsState:SettingsStateType>
-            </switch:EqualTo.Value>
         </switch:EqualTo>
+    </valueConverters:SwitchValueConverter>
 
-        <switch:EqualTo>
-            <switch:EqualTo.Result>
-                <SolidColorBrush Color="DarkOrange" />
-            </switch:EqualTo.Result>
-            <switch:EqualTo.Value>
-                <serviceSettingsState:SettingsStateType>Checking</serviceSettingsState:SettingsStateType>
-            </switch:EqualTo.Value>
-        </switch:EqualTo>
-
+    <valueConverters:SwitchValueConverter x:Key="{x:Static resources:XamlResources.ServiceStateTitleConverter}" ConvertDefault="Unknown">
+        <switch:EqualTo Result="Valid" Value="{m:Boolean True}" />
+        <switch:EqualTo Result="Invalid" Value="{m:Boolean False}" />
     </valueConverters:SwitchValueConverter>
 </ResourceDictionary>

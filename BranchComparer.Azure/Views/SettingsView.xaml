@@ -21,23 +21,23 @@
     </ps:GroupExpander.Resources>
     <StackPanel Margin="0,0,0,5">
         <ps:HeaderedContent Header="Project">
-            <ps:TextBox IsSideButtonVisible="True" Value="{Binding AzureService.Settings.Project}" />
+            <ps:TextBox IsSideButtonVisible="True" Value="{Binding Settings.Project}" />
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="Secret">
-            <ps:PasswordBox IsSideButtonVisible="True" Value="{Binding AzureService.Settings.Secret}" />
+            <ps:PasswordBox IsSideButtonVisible="True" Value="{Binding Settings.Secret}" />
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="Cache directory">
             <ps:TextBox IsSideButtonVisible="True"
                         SideButtonCommand="{Binding BrowseAzureCacheDirectoryCommand}"
                         SideButtonGeometry="{StaticResource {x:Static resources:Icons.FileSelectGeometry}}"
-                        Value="{Binding AzureService.Settings.CacheDirectory}" />
+                        Value="{Binding Settings.CacheDirectory}" />
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="State">
             <StackPanel Orientation="Horizontal">
                 <ps:Button Width="150"
-                           Background="{Binding Path=AzureService.State.StateType, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
+                           Background="{Binding Path=AzureService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
                            Command="{Binding InvalidateAzureSettingsCommand}"
-                           Content="{Binding AzureService.State.StateType}"
+                           Content="{Binding Path=AzureService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateTitleConverter}}}"
                            ToolTip="{Binding AzureService.State.Description}" />
             </StackPanel>
         </ps:HeaderedContent>

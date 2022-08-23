@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Autofac;
 using BranchComparer.Infrastructure.Services;
@@ -20,47 +19,29 @@ public class CommitsViewModel : BaseNotifyPropertyChanged,
                                 IDisposable,
                                 IViewModel
 {
+    private readonly ThrottlingTrigger _branchChangedTrigger;
     private readonly ILifetimeScope _scope;
-    private readonly ThrottlingTrigger _settingsChangedTrigger;
-    private readonly string _tag;
-    private string _branch;
     private IReadOnlyList<CommitViewModel> _commits;
     private string _error;
 
-    public CommitsViewModel(string tag,
-                            FlowDirection flowDirection,
+    public CommitsViewModel(FlowDirection flowDirection,
                             ISettingsService settingsService,
                             IGitService gitService,
                             ILifetimeScope scope)
     {
-        _tag = tag;
         _scope = scope;
 
         FlowDirection = flowDirection;
         GitService = gitService;
-        GitService.StateChanged += GitServiceOnStateChanged;
+        //GitService.StateChanged += GitServiceOnStateChanged;
 
-        _settingsChangedTrigger = ThrottlingTrigger.Setup()
-                                                   .Throttle(TimeSpan.FromMilliseconds(200))
-                                                   .Subscribe<EventArgs>(OnSettingsChangedTriggered)
-                                                   .Create()
-                                                   .Activate();
+        //_branchChangedTrigger = ThrottlingTrigger.Setup()
+        //                                         .Throttle(TimeSpan.FromMilliseconds(200))
+        //                                         .Subscribe<EventArgs>(OnBranchChangedTriggered)
+        //                                         .Create()
+        //                                         .Activate();
 
-        settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName + _tag, this);
-    }
-
-    [JsonProperty]
-    public string Branch
-    {
-        get { return _branch; }
-        set
-        {
-            if (SetField(ref _branch, value))
-            {
-                GitService.RegisterBranchUsage(_tag, value);
-                _settingsChangedTrigger.Trigger();
-            }
-        }
+        settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName + flowDirection, this);
     }
 
     public IReadOnlyList<CommitViewModel> Commits
@@ -85,26 +66,13 @@ public class CommitsViewModel : BaseNotifyPropertyChanged,
 
     public void Dispose()
     {
-        GitService.StateChanged -= GitServiceOnStateChanged;
-        _settingsChangedTrigger?.Dispose();
+        //GitService.StateChanged -= GitServiceOnStateChanged;
+        _branchChangedTrigger?.Dispose();
     }
 
     private void GitServiceOnStateChanged(object sender, EventArgs e)
     {
-        _settingsChangedTrigger.Trigger();
-    }
-
-    private void OnSettingsChangedTriggered(object sender, EventArgs e)
-    {
-        try
-        {
-            var commits = GitService.GetCommitsFor(_tag);
-            Commits = commits.Select(CreateCommitViewModel).ToList();
-        }
-        catch (Exception exception)
-        {
-            Error = exception.GetBaseException().Message;
-        }
+        _branchChangedTrigger.Trigger();
     }
 
     private CommitViewModel CreateCommitViewModel(Commit commit)

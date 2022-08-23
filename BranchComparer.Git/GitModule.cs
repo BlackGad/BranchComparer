@@ -26,14 +26,11 @@ public class GitModule : Module
 
     private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
     {
-        service.Object(Regions.FILTER).Value = scope.Resolve<FilterViewModel>();
-
         service.Collection(Regions.SETTINGS).Add(scope.Resolve<SettingsViewModel>());
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
     {
-        service.AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
-               .AssociateTemplate<SettingsViewModel>(scope.Resolve<IDataTemplate<SettingsView>>());
+        service.AssociateTemplate<SettingsViewModel>(scope.Resolve<IDataTemplate<SettingsView>>());
     }
 }

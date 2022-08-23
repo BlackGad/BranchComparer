@@ -3,7 +3,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using PS;
 
-namespace BranchComparer.Infrastructure.Services.AzureService;
+namespace BranchComparer.Azure.Services.AzureService;
 
 public class AzureSettings : BaseNotifyPropertyChanged,
                              ICloneable
@@ -43,15 +43,7 @@ public class AzureSettings : BaseNotifyPropertyChanged,
 
     object ICloneable.Clone()
     {
-        return Clone();
-    }
-
-    public AzureSettings Clone()
-    {
-        return new AzureSettings
-        {
-            Project = Project,
-            Secret = Secret
-        };
+        var serialized = JsonConvert.SerializeObject(this);
+        return JsonConvert.DeserializeObject<AzureSettings>(serialized) ?? new AzureSettings();
     }
 }

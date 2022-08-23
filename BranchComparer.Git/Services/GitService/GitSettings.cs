@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PS;
 
-namespace BranchComparer.Infrastructure.Services.GitService;
+namespace BranchComparer.Git.Services.GitService;
 
 public class GitSettings : BaseNotifyPropertyChanged,
                            ICloneable
@@ -36,12 +36,14 @@ public class GitSettings : BaseNotifyPropertyChanged,
         set { SetField(ref _showUniqueCommits, value); }
     }
 
-    public object Clone()
+    object ICloneable.Clone()
     {
-        return new GitSettings
-        {
-            RepositoryDirectory = RepositoryDirectory,
-            Period = Period
-        };
+        return Clone();
+    }
+
+    public GitSettings Clone()
+    {
+        var serialized = JsonConvert.SerializeObject(this);
+        return JsonConvert.DeserializeObject<GitSettings>(serialized) ?? new GitSettings();
     }
 }

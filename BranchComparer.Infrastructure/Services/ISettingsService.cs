@@ -1,10 +1,14 @@
-﻿namespace BranchComparer.Infrastructure.Services;
+﻿using System.ComponentModel;
+
+namespace BranchComparer.Infrastructure.Services;
 
 public interface ISettingsService
 {
-    bool Load(string key, object item);
+    T GetObservableSettings<T>()
+        where T : INotifyPropertyChanged, ICloneable;
+
+    T GetSettings<T>()
+        where T : INotifyPropertyChanged, ICloneable;
 
     void LoadPopulateAndSaveOnDispose(string key, object item);
-
-    bool Save(string key, object item);
 }

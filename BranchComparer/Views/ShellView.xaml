@@ -38,18 +38,42 @@
                             Focusable="False" />
 
             <Grid Grid.Row="2" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition Width="40" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <ContentControl Grid.Column="0"
+                <ps:HeaderedContent Grid.Row="0"
+                                    Grid.Column="0"
+                                    Header="Branch"
+                                    Orientation="Vertical">
+                    <ps:AutoCompleteBox AllowFreeItem="True"
+                                        ItemsSource="{Binding EnvironmentService.AvailableBranches}"
+                                        SelectedItem="{Binding EnvironmentService.LeftBranch}" />
+                </ps:HeaderedContent>
+
+                <ps:HeaderedContent Grid.Row="0"
+                                    Grid.Column="2"
+                                    Header="Branch"
+                                    Orientation="Vertical">
+                    <ps:AutoCompleteBox AllowFreeItem="True"
+                                        ItemsSource="{Binding EnvironmentService.AvailableBranches}"
+                                        SelectedItem="{Binding EnvironmentService.RightBranch}" />
+                </ps:HeaderedContent>
+
+                <ContentControl Grid.Row="1"
+                                Grid.Column="0"
                                 ContentTemplateSelector="{mvvm:TemplateResolver}"
                                 Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH}}"
                                 Focusable="False" />
 
-                <ContentControl Grid.Column="2"
+                <ContentControl Grid.Row="1"
+                                Grid.Column="2"
                                 ContentTemplateSelector="{mvvm:TemplateResolver}"
                                 Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH}}"
                                 Focusable="False" />

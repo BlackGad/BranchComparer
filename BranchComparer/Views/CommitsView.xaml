@@ -11,50 +11,38 @@
                 d:DesignWidth="800"
                 Focusable="False"
                 mc:Ignorable="d">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <StackPanel>
-            <ps:HeaderedContent Header="Branch" Orientation="Vertical">
-                <ps:AutoCompleteBox AllowFreeItem="True"
-                                    ItemsSource="{Binding GitService.AvailableBranches}"
-                                    SelectedItem="{Binding Branch}" />
-            </ps:HeaderedContent>
-        </StackPanel>
-        <ps:HeaderedContent Grid.Row="1" Orientation="Vertical">
-            <ps:HeaderedContent.Header>
-                <TextBlock Text="{Binding Path=Commits.Count, StringFormat=Commits ({0})}" />
-            </ps:HeaderedContent.Header>
 
-            <ListBox BorderThickness="0"
-                     ItemTemplateSelector="{mvvm:TemplateResolver}"
-                     ItemsSource="{Binding Commits}"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.IsDeferredScrollingEnabled="True"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     VirtualizingStackPanel.IsVirtualizing="True">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <Grid Margin="0,1">
-                                        <ContentPresenter />
-                                    </Grid>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
-        </ps:HeaderedContent>
-    </Grid>
+    <ps:HeaderedContent Orientation="Vertical">
+        <ps:HeaderedContent.Header>
+            <TextBlock Text="{Binding Path=Commits.Count, StringFormat=Commits ({0})}" />
+        </ps:HeaderedContent.Header>
+
+        <ListBox BorderThickness="0"
+                 ItemTemplateSelector="{mvvm:TemplateResolver}"
+                 ItemsSource="{Binding Commits}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.IsDeferredScrollingEnabled="True"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 VirtualizingStackPanel.IsVirtualizing="True">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Grid Margin="0,1">
+                                    <ContentPresenter />
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+    </ps:HeaderedContent>
 </ContentControl>
