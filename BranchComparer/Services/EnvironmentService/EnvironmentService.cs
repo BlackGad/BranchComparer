@@ -10,13 +10,14 @@ using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.ViewModels;
 using Newtonsoft.Json;
 using PS;
+using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
 using PS.Threading.ThrottlingTrigger;
 using PS.WPF.Extensions;
 
-namespace BranchComparer.Services;
+namespace BranchComparer.Services.EnvironmentService;
 
 [DependencyRegisterAsInterface(typeof(IEnvironmentService))]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
@@ -167,8 +168,8 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
     {
         try
         {
-            IReadOnlyList<Commit> leftCommits;
-            IReadOnlyList<Commit> rightCommits;
+            IEnumerable<Commit> leftCommits;
+            IEnumerable<Commit> rightCommits;
             if (ShowUniqueCommits)
             {
                 leftCommits = _gitService.GetCommits(LeftBranch, RightBranch);
@@ -180,8 +181,31 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
                 rightCommits = _gitService.GetCommits(RightBranch, null);
             }
 
-            LeftCommits = TransformCommits(FilterCommits(leftCommits));
-            RightCommits = TransformCommits(FilterCommits(rightCommits));
+            leftCommits = FilterCommits(leftCommits).ToList();
+            rightCommits = FilterCommits(rightCommits).ToList();
+
+            var cherryPicks = leftCommits.Compare(rightCommits, commit => HashCode.Combine(commit.MessageShort, commit.Author, commit.AuthorTime))
+                                         .PresentInBoth
+                                         .Where(tuple => tuple.Item1.Id != tuple.Item2.Id)
+                                         .ToList();
+            var cherryPicksSources = new Dictionary<Commit, string>();
+            var cherryPicksTargets = new Dictionary<Commit, string>();
+            foreach (var tuple in cherryPicks)
+            {
+                if (tuple.Item1.CommitterTime > tuple.Item2.CommitterTime)
+                {
+                    cherryPicksSources.Add(tuple.Item2, tuple.Item1.Id);
+                    cherryPicksTargets.Add(tuple.Item1, tuple.Item2.Id);
+                }
+                else
+                {
+                    cherryPicksSources.Add(tuple.Item1, tuple.Item2.Id);
+                    cherryPicksTargets.Add(tuple.Item2, tuple.Item1.Id);
+                }
+            }
+
+            LeftCommits = TransformCommits(leftCommits, cherryPicksSources, cherryPicksTargets);
+            RightCommits = TransformCommits(rightCommits, cherryPicksSources, cherryPicksTargets);
         }
         catch
         {
@@ -195,7 +219,7 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
         if (Period.HasValue)
         {
             var untilTime = DateTime.Now - Period.Value;
-            commits = commits.Where(c => c.Time >= untilTime);
+            commits = commits.Where(c => c.AuthorTime >= untilTime);
         }
 
         return commits;
@@ -206,17 +230,27 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
         _updateAvailableBranchesTrigger.Trigger();
     }
 
-    private IReadOnlyList<IEnvironmentCommit> TransformCommits(IEnumerable<Commit> commits)
+    private IReadOnlyList<IEnvironmentCommit> TransformCommits(
+        IEnumerable<Commit> commits,
+        Dictionary<Commit, string> cherryPickSources,
+        Dictionary<Commit, string> cherryPickTargets)
     {
-        return commits.Select(c => new EnvironmentCommitViewModel
+        return commits.Select(c =>
         {
-            Id = c.Id,
-            Author = c.Author,
-            Message = c.Message,
-            ShortMessage = c.MessageShort,
-            Time = c.Time,
-            PR = c.MergedPR.HasValue ? _scope.Resolve<EnvironmentCommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null,
-            RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<EnvironmentCommitRelatedItemViewModel>(TypedParameter.From(i))).ToList(),
+            cherryPickSources.TryGetValue(c, out var cherryPickSource);
+            cherryPickTargets.TryGetValue(c, out var cherryPickTarget);
+            return new EnvironmentCommitViewModel
+            {
+                Id = c.Id,
+                Author = c.Author,
+                Message = c.Message,
+                ShortMessage = c.MessageShort,
+                Time = c.AuthorTime,
+                CherryPickSource = cherryPickSource,
+                CherryPickTarget = cherryPickTarget,
+                PR = c.MergedPR.HasValue ? _scope.Resolve<EnvironmentCommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null,
+                RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<EnvironmentCommitRelatedItemViewModel>(TypedParameter.From(i))).ToList(),
+            };
         }).ToList();
     }
 }

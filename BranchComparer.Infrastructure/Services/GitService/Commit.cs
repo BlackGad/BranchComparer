@@ -4,11 +4,20 @@ namespace BranchComparer.Infrastructure.Services.GitService;
 
 public record Commit
 {
-    public Commit(string id, string author, DateTimeOffset time, string message, string messageShort)
+    public Commit(
+        string id,
+        string author,
+        DateTimeOffset authorTime,
+        string committer,
+        DateTimeOffset committerTime,
+        string message,
+        string messageShort)
     {
         Id = id;
         Author = author;
-        Time = time;
+        AuthorTime = authorTime;
+        Committer = committer;
+        CommitterTime = committerTime;
         MessageShort = messageShort;
         Message = message.Trim('\r', '\n', '\t', ' ');
 
@@ -29,6 +38,12 @@ public record Commit
 
     public string Author { get; }
 
+    public DateTimeOffset AuthorTime { get; }
+
+    public string Committer { get; }
+
+    public DateTimeOffset CommitterTime { get; }
+
     public string Id { get; }
 
     public int? MergedPR { get; }
@@ -38,6 +53,4 @@ public record Commit
     public string MessageShort { get; }
 
     public IReadOnlyList<int> RelatedItems { get; }
-
-    public DateTimeOffset Time { get; }
-};
+}

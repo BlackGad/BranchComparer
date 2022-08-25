@@ -52,7 +52,7 @@
                                     Grid.Column="0"
                                     Orientation="Vertical">
                     <ps:HeaderedContent.Header>
-                        <TextBlock Text="{Binding EnvironmentService.LeftBranch.Length, StringFormat=Branch({0})}" />
+                        <TextBlock Text="{Binding EnvironmentService.LeftCommits.Count, StringFormat=Branch({0})}" />
                     </ps:HeaderedContent.Header>
                     <ps:AutoCompleteBox AllowFreeItem="True"
                                         ItemsSource="{Binding EnvironmentService.AvailableBranches}"
@@ -63,7 +63,7 @@
                                     Grid.Column="2"
                                     Orientation="Vertical">
                     <ps:HeaderedContent.Header>
-                        <TextBlock Text="{Binding EnvironmentService.RightBranch.Length, StringFormat=Branch({0})}" />
+                        <TextBlock Text="{Binding EnvironmentService.RightCommits.Count, StringFormat=Branch({0})}" />
                     </ps:HeaderedContent.Header>
                     <ps:AutoCompleteBox AllowFreeItem="True"
                                         ItemsSource="{Binding EnvironmentService.AvailableBranches}"
@@ -73,15 +73,14 @@
                 <commitsView:CommitsView Grid.Row="1"
                                          Grid.Column="0"
                                          Focusable="False"
-                                         Grid.IsSharedSizeScope="True"
                                          ItemsSource="{Binding EnvironmentService.LeftCommits}"
                                          LayoutFlowDirection="LeftToRight">
                     <commitsView:CommitsView.ItemTemplate>
                         <DataTemplate DataType="environmentService:IEnvironmentCommit">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="70" SharedSizeGroup="CommitPRColumn" />
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="CommitRelatedItemColumn" />
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="100" />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
@@ -112,7 +111,6 @@
                 <commitsView:CommitsView Grid.Row="1"
                                          Grid.Column="2"
                                          Focusable="False"
-                                         Grid.IsSharedSizeScope="True"
                                          ItemsSource="{Binding EnvironmentService.RightCommits}"
                                          LayoutFlowDirection="RightToLeft">
                     <commitsView:CommitsView.ItemTemplate>
@@ -120,8 +118,8 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="CommitRelatedItemColumn" />
-                                    <ColumnDefinition Width="70" SharedSizeGroup="CommitPRColumn" />
+                                    <ColumnDefinition Width="100"  />
+                                    <ColumnDefinition Width="70"  />
                                 </Grid.ColumnDefinitions>
 
                                 <ContentControl Grid.Column="0"

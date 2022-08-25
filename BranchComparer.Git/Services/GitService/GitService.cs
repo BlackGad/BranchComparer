@@ -1,4 +1,5 @@
-﻿using BranchComparer.Infrastructure.Events;
+﻿using System.Windows;
+using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
 using FluentValidation;
@@ -9,7 +10,6 @@ using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
 using PS.Threading;
 using PS.WPF.Extensions;
-using System.Windows;
 using Commit = BranchComparer.Infrastructure.Services.GitService.Commit;
 
 namespace BranchComparer.Git.Services.GitService;
@@ -94,7 +94,14 @@ public class GitService : BaseNotifyPropertyChanged,
 
         return repo.Commits
                    .QueryBy(commitFilter)
-                   .Select(c => new Commit(c.Id.Sha, c.Author.Name, c.Author.When, c.Message, c.MessageShort))
+                   .Select(c => new Commit(
+                               c.Id.Sha,
+                               c.Author.Name,
+                               c.Author.When,
+                               c.Committer.Name,
+                               c.Committer.When,
+                               c.Message,
+                               c.MessageShort))
                    .ToList();
     }
 

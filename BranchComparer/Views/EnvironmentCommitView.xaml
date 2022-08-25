@@ -1,29 +1,105 @@
-﻿<controls:TileContentControl x:Class="BranchComparer.Views.EnvironmentCommitView"
-                             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                             xmlns:controls="clr-namespace:BranchComparer.Controls"
-                             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                             xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
-                             xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
-                             Margin="1"
-                             d:DataContext="{d:DesignInstance viewModels:EnvironmentCommitViewModel}"
-                             Focusable="False"
-                             mc:Ignorable="d">
-    <TextBlock Margin="2"
-               Foreground="{theme:Brush Main}"
-               FontSize="{theme:FontSize S}"
-               Text="{Binding ShortMessage}"
-               TextTrimming="CharacterEllipsis"
-               ToolTipService.InitialShowDelay="100">
-        <TextBlock.ToolTip>
-            <ToolTip HasDropShadow="True"
-                     HorizontalOffset="0"
-                     Placement="Bottom">
-                <TextBlock FontSize="{theme:FontSize S}"
-                           Text="{Binding Message}"
-                           TextWrapping="Wrap" />
-            </ToolTip>
-        </TextBlock.ToolTip>
-    </TextBlock>
-</controls:TileContentControl>
+﻿<Grid x:Class="BranchComparer.Views.EnvironmentCommitView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:commitsView="clr-namespace:BranchComparer.Controls.CommitsView"
+      xmlns:controls="clr-namespace:BranchComparer.Controls"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ps="http://schemas.ps.com/2019/xaml"
+      xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+      xmlns:tilesContentControl="clr-namespace:BranchComparer.Controls.TilesContentControl"
+      xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
+      Margin="1"
+      d:DataContext="{d:DesignInstance viewModels:EnvironmentCommitViewModel}"
+      Focusable="False"
+      mc:Ignorable="d">
+
+    <Grid.Resources>
+        <ps:CascadeValueConverter x:Key="EmptyStringToVisibilityConverter">
+            <ps:RelayValueConverter Instance="{x:Static ps:StringConverters.IsEmpty}" />
+            <ps:RelayValueConverter Instance="{x:Static ps:BooleanConverters.ToVisibilityInverted}" />
+        </ps:CascadeValueConverter>
+    </Grid.Resources>
+
+    <tilesContentControl:TilesContentControl LayoutFlowDirection="{Binding RelativeSource={RelativeSource AncestorType=commitsView:CommitsView}, Path=LayoutFlowDirection}">
+        <tilesContentControl:TilesContentControl.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </tilesContentControl:TilesContentControl.ColumnDefinitions>
+        <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
+            <TextBlock Foreground="{theme:Brush Main}"
+                       FontSize="{theme:FontSize S}"
+                       Text="{Binding ShortMessage}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTipService.InitialShowDelay="100">
+                <TextBlock.ToolTip>
+                    <ToolTip HasDropShadow="True"
+                             HorizontalOffset="0"
+                             Placement="Bottom">
+                        <TextBlock FontSize="{theme:FontSize S}"
+                                   Text="{Binding Message}"
+                                   TextWrapping="Wrap" />
+                    </ToolTip>
+                </TextBlock.ToolTip>
+            </TextBlock>
+        </tilesContentControl:TilesContentControlItem>
+        <tilesContentControl:TilesContentControlItem Background="{theme:Brush Failure}" Visibility="{Binding CherryPickSource, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+            <TextBlock Foreground="{theme:Brush Main}"
+                       FontSize="{theme:FontSize S}"
+                       Text="Source"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTipService.InitialShowDelay="100" />
+        </tilesContentControl:TilesContentControlItem>
+        <tilesContentControl:TilesContentControlItem Background="{theme:Brush Failure}" Visibility="{Binding CherryPickTarget, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+            <TextBlock Foreground="{theme:Brush Main}"
+                       FontSize="{theme:FontSize S}"
+                       Text="Target"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTipService.InitialShowDelay="100" />
+        </tilesContentControl:TilesContentControlItem>
+    </tilesContentControl:TilesContentControl>
+
+    <!--<Grid.ColumnDefinitions>
+        <ColumnDefinition />
+        <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+
+    <controls:TileContentControl Grid.Column="0">
+        <TextBlock Margin="2"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="{Binding ShortMessage}"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTipService.InitialShowDelay="100">
+            <TextBlock.ToolTip>
+                <ToolTip HasDropShadow="True"
+                         HorizontalOffset="0"
+                         Placement="Bottom">
+                    <TextBlock FontSize="{theme:FontSize S}"
+                               Text="{Binding Message}"
+                               TextWrapping="Wrap" />
+                </ToolTip>
+            </TextBlock.ToolTip>
+        </TextBlock>
+    </controls:TileContentControl>
+
+    <controls:TileContentControl Grid.Column="1" Visibility="{Binding CherryPickSource, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+        <TextBlock Margin="2"
+                   Background="{theme:Brush Failure}"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="Source"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTipService.InitialShowDelay="100" />
+    </controls:TileContentControl>
+
+    <controls:TileContentControl Grid.Column="1" Visibility="{Binding CherryPickTarget, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+        <TextBlock Margin="2"
+                   Background="{theme:Brush Failure}"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="Target"
+                   TextTrimming="CharacterEllipsis"
+                   ToolTipService.InitialShowDelay="100" />
+    </controls:TileContentControl>-->
+</Grid>

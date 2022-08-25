@@ -10,10 +10,11 @@ public class EnvironmentCommitViewModel : BaseNotifyPropertyChanged,
                                           IEnvironmentCommit
 {
     private string _author;
+    private string _cherryPickSource;
+    private string _cherryPickTarget;
     private string _id;
     private string _message;
     private object _pR;
-
     private IReadOnlyList<object> _relatedItems;
     private string _shortMessage;
     private DateTimeOffset _time;
@@ -27,6 +28,18 @@ public class EnvironmentCommitViewModel : BaseNotifyPropertyChanged,
     {
         get { return _author; }
         set { SetField(ref _author, value); }
+    }
+
+    public string CherryPickSource
+    {
+        get { return _cherryPickSource; }
+        set { SetField(ref _cherryPickSource, value); }
+    }
+
+    public string CherryPickTarget
+    {
+        get { return _cherryPickTarget; }
+        set { SetField(ref _cherryPickTarget, value); }
     }
 
     public string Id

@@ -636,23 +636,43 @@
 &#xD;
 		private $type$ _$fieldName$;</s:String>
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/@KeyIndexDefined">True</s:Boolean>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Applicability/=Live/@EntryIndexedValue">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Description/@EntryValue">Routed event template</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventArgsType/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventArgsType/Expression/@EntryValue">fixedTypeName("System.Windows.RoutedEventArgs")</s:String>
+	<s:Int64 x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventArgsType/Order/@EntryValue">3</s:Int64>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventHandlerDelegate/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventHandlerDelegate/Expression/@EntryValue">fixedTypeName("System.Windows.RoutedEventHandler")</s:String>
+	<s:Int64 x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=EventHandlerDelegate/Order/@EntryValue">2</s:Int64>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Name/@KeyIndexDefined">True</s:Boolean>
+	<s:Int64 x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Name/Order/@EntryValue">0</s:Int64>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Owner/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Owner/Expression/@EntryValue">typeName()</s:String>
+	<s:Int64 x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Owner/InitialRange/@EntryValue">-1</s:Int64>
+	<s:Int64 x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Field/=Owner/Order/@EntryValue">1</s:Int64>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Reformat/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Scope/=C3001E7C0DA78E4487072B7E050D86C5/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Scope/=C3001E7C0DA78E4487072B7E050D86C5/CustomProperties/=minimumLanguageVersion/@EntryIndexedValue">2.0</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Scope/=C3001E7C0DA78E4487072B7E050D86C5/Type/@EntryValue">InCSharpFile</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Shortcut/@EntryValue">revent</s:String>
+	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/ShortenQualifiedReferences/@EntryValue">True</s:Boolean>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=09E34A93EE928941AE7C2955D93FD6EF/Text/@EntryValue">   public static readonly RoutedEvent $Name$Event = EventManager.RegisterRoutedEvent( &#xD;
+           "$Name$",&#xD;
+           RoutingStrategy.Bubble,&#xD;
+           typeof( $EventHandlerDelegate$ ),&#xD;
+           typeof( $Owner$ ) );&#xD;
+&#xD;
+       public event $EventHandlerDelegate$ $Name$&#xD;
+       {&#xD;
+           add { AddHandler( $Name$Event, value ); }&#xD;
+           remove { RemoveHandler( $Name$Event, value ); }&#xD;
+       }&#xD;
+&#xD;
+       protected virtual void Raise$Name$Event()&#xD;
+       {&#xD;
+           RaiseEvent( new $EventArgsType$( $Name$Event, this ) );&#xD;
+       }</s:String>
 	
 	
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Bindable/@EntryIndexedValue">True</s:Boolean>

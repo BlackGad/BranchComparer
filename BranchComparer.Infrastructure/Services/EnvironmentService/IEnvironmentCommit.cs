@@ -4,6 +4,10 @@ public interface IEnvironmentCommit
 {
     string Author { get; }
 
+    string CherryPickSource { get; }
+
+    string CherryPickTarget { get; }
+
     string Id { get; }
 
     string Message { get; }
