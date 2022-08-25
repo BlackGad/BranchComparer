@@ -79,8 +79,8 @@
                         <DataTemplate DataType="environmentService:IEnvironmentCommit">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="140" />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
@@ -118,8 +118,8 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
-                                    <ColumnDefinition Width="100"  />
-                                    <ColumnDefinition Width="70"  />
+                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition Width="70" />
                                 </Grid.ColumnDefinitions>
 
                                 <ContentControl Grid.Column="0"
@@ -145,16 +145,6 @@
                         </DataTemplate>
                     </commitsView:CommitsView.ItemTemplate>
                 </commitsView:CommitsView>
-
-
-                <!--<Canvas Grid.Column="0" Grid.ColumnSpan="2">
-                    <Line Stroke="Black"
-                          StrokeThickness="10"
-                          X1="10"
-                          X2="175"
-                          Y1="10"
-                          Y2="50" />
-                </Canvas>-->
             </Grid>
         </Grid>
     </ps:BusyContainer>

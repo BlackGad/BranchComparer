@@ -53,6 +53,7 @@ public class TilesContentControl : ItemsControl
     {
         ColumnDefinitions = new FreezableCollection<ColumnDefinition>();
         AddHandler(TilesContentControlPanel.PanelLoadedEvent, new RoutedEventHandler(OnMainPanelLoaded));
+        AddHandler(TilesContentControlPanel.PanelChildChangedEvent, new RoutedEventHandler(OnMainPanelChildChanged));
     }
 
     public FreezableCollection<ColumnDefinition> ColumnDefinitions
@@ -73,6 +74,13 @@ public class TilesContentControl : ItemsControl
         set { SetValue(LayoutFlowDirectionProperty, value); }
     }
 
+    protected override Size ArrangeOverride(Size arrangeBounds)
+    {
+        var result = base.ArrangeOverride(arrangeBounds);
+        UpdateItems();
+        return result;
+    }
+
     protected override DependencyObject GetContainerForItemOverride()
     {
         return new TilesContentControlItem();
@@ -87,6 +95,11 @@ public class TilesContentControl : ItemsControl
     {
         base.PrepareContainerForItemOverride(element, item);
         Dispatcher.Postpone(UpdateItems);
+    }
+
+    private void OnMainPanelChildChanged(object sender, RoutedEventArgs e)
+    {
+        UpdateItems();
     }
 
     private void OnMainPanelLoaded(object sender, RoutedEventArgs e)
@@ -112,18 +125,14 @@ public class TilesContentControl : ItemsControl
         var firstVisibleContainer = itemContainers.FirstOrDefault(c => c.Visibility != Visibility.Collapsed);
         var lastVisibleContainer = itemContainers.LastOrDefault(c => c.Visibility != Visibility.Collapsed);
 
-        for (var i = 0; i < itemContainers.Count; i++)
+        foreach (var itemContainer in itemContainers)
         {
-            var itemContainer = itemContainers[i];
-            var index = ItemContainerGenerator.IndexFromContainer(itemContainer);
-            if (LayoutFlowDirection == FlowDirection.LeftToRight)
-            {
-                Grid.SetColumn(itemContainer, index);
-            }
-            else
-            {
-                Grid.SetColumn(itemContainer, ItemContainerGenerator.Items.Count - index - 1);
-            }
+            var containerIndex = ItemContainerGenerator.IndexFromContainer(itemContainer);
+            var columnIndex = LayoutFlowDirection == FlowDirection.LeftToRight
+                ? containerIndex
+                : ItemContainerGenerator.Items.Count - containerIndex - 1;
+
+            Grid.SetColumn(itemContainer, columnIndex);
 
             var isFirstItem = itemContainer == firstVisibleContainer;
             var isLastItem = itemContainer == lastVisibleContainer;
@@ -145,7 +154,7 @@ public class TilesContentControl : ItemsControl
                 { isFirstItem: true, LayoutFlowDirection: FlowDirection.RightToLeft, } => new Thickness(0, BorderThickness.Top, BorderThickness.Left, BorderThickness.Bottom),
                 { isLastItem: true, LayoutFlowDirection: FlowDirection.LeftToRight, } => new Thickness(0, BorderThickness.Top, BorderThickness.Right, BorderThickness.Bottom),
                 { isLastItem: true, LayoutFlowDirection: FlowDirection.RightToLeft, } => new Thickness(BorderThickness.Right, BorderThickness.Top, 0, BorderThickness.Bottom),
-                _ => new Thickness(),
+                _ => new Thickness(0, BorderThickness.Top, 0, BorderThickness.Bottom),
             };
         }
     }
