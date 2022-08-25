@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:commitsView="clr-namespace:BranchComparer.Controls.CommitsView">
+
+    <ControlTemplate x:Key="{x:Static commitsView:CommitsView+Resource.ControlTemplate}" TargetType="commitsView:CommitsView">
+        <Grid Background="{TemplateBinding Background}">
+            <ItemsPresenter />
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="{x:Static commitsView:CommitsView+Resource.ControlStyle}" BasedOn="{StaticResource {x:Type ListBox}}" TargetType="commitsView:CommitsView">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <!--<Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="True" />-->
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <!--<Setter Property="Template" Value="{StaticResource {x:Static commitsView:CommitsView+Resource.ControlTemplate}}" />-->
+        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
+    </Style>
+
+</ResourceDictionary>

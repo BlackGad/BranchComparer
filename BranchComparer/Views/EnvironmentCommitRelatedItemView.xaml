@@ -1,0 +1,110 @@
+﻿<Grid x:Class="BranchComparer.Views.EnvironmentCommitRelatedItemView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:azureService="clr-namespace:BranchComparer.Infrastructure.Services.AzureService;assembly=BranchComparer.Infrastructure"
+      xmlns:controls="clr-namespace:BranchComparer.Controls"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ps="http://schemas.ps.com/2019/xaml"
+      xmlns:switch="http://schemas.ps.com/2019/xaml/switchvalueconverter"
+      xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+      xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
+      Margin="1"
+      d:DataContext="{d:DesignInstance viewModels:EnvironmentCommitRelatedItemViewModel}"
+      Focusable="False"
+      ToolTip="{Binding Title}"
+      ToolTipService.InitialShowDelay="100"
+      mc:Ignorable="d">
+    <Grid.Resources>
+
+        <ps:CascadeValueConverter x:Key="EmptyStringToVisibilityConverter">
+            <ps:RelayValueConverter Instance="{x:Static ps:StringConverters.IsEmpty}" />
+            <ps:RelayValueConverter Instance="{x:Static ps:BooleanConverters.ToVisibilityInverted}" />
+        </ps:CascadeValueConverter>
+
+        <ps:SwitchValueConverter x:Key="ItemTypeToColorConverter">
+            <ps:SwitchValueConverter.ConvertDefault>
+                <SolidColorBrush Color="LightGray" />
+            </ps:SwitchValueConverter.ConvertDefault>
+            <switch:EqualTo>
+                <switch:EqualTo.Value>
+                    <azureService:AzureItemType>PBI</azureService:AzureItemType>
+                </switch:EqualTo.Value>
+                <switch:EqualTo.Result>
+                    <SolidColorBrush Color="RoyalBlue" />
+                </switch:EqualTo.Result>
+            </switch:EqualTo>
+            <switch:EqualTo>
+                <switch:EqualTo.Value>
+                    <azureService:AzureItemType>Bug</azureService:AzureItemType>
+                </switch:EqualTo.Value>
+                <switch:EqualTo.Result>
+                    <SolidColorBrush Color="Red" />
+                </switch:EqualTo.Result>
+            </switch:EqualTo>
+            <switch:EqualTo>
+                <switch:EqualTo.Value>
+                    <azureService:AzureItemType>Task</azureService:AzureItemType>
+                </switch:EqualTo.Value>
+                <switch:EqualTo.Result>
+                    <SolidColorBrush Color="Orange" />
+                </switch:EqualTo.Result>
+            </switch:EqualTo>
+            <switch:EqualTo>
+                <switch:EqualTo.Value>
+                    <azureService:AzureItemType>Feature</azureService:AzureItemType>
+                </switch:EqualTo.Value>
+                <switch:EqualTo.Result>
+                    <SolidColorBrush Color="DarkViolet" />
+                </switch:EqualTo.Result>
+            </switch:EqualTo>
+        </ps:SwitchValueConverter>
+
+    </Grid.Resources>
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="30" />
+        <ColumnDefinition Width="70" />
+        <ColumnDefinition Width="40" />
+    </Grid.ColumnDefinitions>
+
+    <controls:TileContentControl Grid.Column="0"
+                                 Background="{Binding Type, Converter={StaticResource ItemTypeToColorConverter}}"
+                                 BorderThickness="1,1,0,1"
+                                 CornerRadius="5,0,0,5">
+
+        <TextBlock Margin="2"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="{Binding Type}"
+                   TextTrimming="CharacterEllipsis" />
+    </controls:TileContentControl>
+
+    <controls:TileContentControl Grid.Column="1"
+                                 BorderThickness="0,1,1,1"
+                                 CornerRadius="0,5,5,0">
+
+        <TextBlock Margin="2"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="{Binding Id}"
+                   TextTrimming="CharacterEllipsis" />
+
+    </controls:TileContentControl>
+
+    <controls:TileContentControl Grid.Column="2"
+                                 Margin="1,0"
+                                 Background="{theme:Brush Success}"
+                                 Visibility="{Binding Release, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+        <TextBlock Margin="2"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{theme:Brush Main}"
+                   FontSize="{theme:FontSize S}"
+                   Text="{Binding Release}"
+                   TextTrimming="CharacterEllipsis" />
+    </controls:TileContentControl>
+</Grid>

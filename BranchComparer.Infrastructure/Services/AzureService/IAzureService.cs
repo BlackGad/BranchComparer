@@ -2,7 +2,7 @@
 
 public interface IAzureService
 {
-    IReadOnlyList<AzureItem> GetItems(IEnumerable<int> ids);
+    AzureItem GetItem(int id);
 
     void InvalidateSettings();
 }

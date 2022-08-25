@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using Autofac;
+﻿using Autofac;
 using Autofac.Core;
 using Autofac.Core.Registration;
 using BranchComparer.Infrastructure;
@@ -33,8 +32,6 @@ public class MainModule : Module
     private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
     {
         service.Object(Regions.FILTER).Value = scope.Resolve<FilterViewModel>();
-        service.Object(Regions.LEFT_BRANCH).Value = scope.Resolve<CommitsViewModel>(TypedParameter.From(FlowDirection.LeftToRight));
-        service.Object(Regions.RIGHT_BRANCH).Value = scope.Resolve<CommitsViewModel>(TypedParameter.From(FlowDirection.RightToLeft));
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
@@ -49,8 +46,9 @@ public class MainModule : Module
                    template: scope.Resolve<IDataTemplate<NotificationView>>(),
                    style: Infrastructure.Resources.XamlResources.ConfirmationStyle);
 
-        service.AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
-               .AssociateTemplate<CommitsViewModel>(scope.Resolve<IDataTemplate<CommitsView>>())
-               .AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>());
+        service.AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
+               .AssociateTemplate<EnvironmentCommitViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitView>>())
+               .AssociateTemplate<EnvironmentCommitPRViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitPRView>>())
+               .AssociateTemplate<EnvironmentCommitRelatedItemViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitRelatedItemView>>());
     }
 }

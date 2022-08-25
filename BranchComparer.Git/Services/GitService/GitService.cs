@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using BranchComparer.Infrastructure.Events;
+﻿using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
 using FluentValidation;
@@ -10,6 +9,7 @@ using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
 using PS.Threading;
 using PS.WPF.Extensions;
+using System.Windows;
 using Commit = BranchComparer.Infrastructure.Services.GitService.Commit;
 
 namespace BranchComparer.Git.Services.GitService;

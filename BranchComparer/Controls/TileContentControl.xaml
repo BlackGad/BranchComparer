@@ -1,0 +1,24 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:BranchComparer.Controls"
+                    xmlns:theme="http://schemas.ps.com/2021/xaml/theme">
+
+    <ControlTemplate x:Key="{x:Static controls:TileContentControl+Resource.ControlTemplate}" TargetType="controls:TileContentControl">
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Focusable="False">
+            <ContentPresenter />
+        </Border>
+    </ControlTemplate>
+
+    <Style x:Key="{x:Static controls:TileContentControl+Resource.ControlStyle}" TargetType="controls:TileContentControl">
+        <Setter Property="Background" Value="{theme:Brush MainBorderDeep}" />
+        <Setter Property="BorderBrush" Value="{theme:Brush MainBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Template" Value="{StaticResource {x:Static controls:TileContentControl+Resource.ControlTemplate}}" />
+    </Style>
+
+</ResourceDictionary>

@@ -1,3 +1,5 @@
-﻿namespace BranchComparer.Infrastructure.Events;
+﻿using BranchComparer.Infrastructure.Services.AzureService;
 
-public record AzureItemResolvedArgs(string Id);
+namespace BranchComparer.Infrastructure.Events;
+
+public record AzureItemResolvedArgs(AzureItem Item);

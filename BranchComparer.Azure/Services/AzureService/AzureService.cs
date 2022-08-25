@@ -1,18 +1,21 @@
 ﻿using System.Collections.Concurrent;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.Caching;
 using System.Windows;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.AzureService;
 using FluentValidation;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.Common;
 using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
+using PS.Runtime.Caching;
 using PS.Runtime.Caching.Default;
 using PS.Threading;
+using PS.Threading.ThrottlingTrigger;
 using PS.WPF.Extensions;
 
 namespace BranchComparer.Azure.Services.AzureService;
@@ -24,13 +27,23 @@ public class AzureService : BaseNotifyPropertyChanged,
                             IAzureService,
                             IDisposable
 {
+    private static object TryGetField(IDictionary<string, object> fields, string key)
+    {
+        if (fields.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+
+        return null;
+    }
+
     private readonly IBroadcastService _broadcastService;
+    private readonly ThrottlingTrigger _itemsResolveRequiredTrigger;
     private readonly ConcurrentBag<int> _notResolvedItems;
     private readonly IValidator<AzureSettings> _settingsValidator;
     private ObjectCache _cache;
     private DefaultRepository _cacheRepository;
     private AzureSettings _settings;
-
     private ServiceState _state;
 
     public AzureService(ISettingsService settingsService, IBroadcastService broadcastService, IValidator<AzureSettings> settingsValidator)
@@ -38,6 +51,11 @@ public class AzureService : BaseNotifyPropertyChanged,
         _broadcastService = broadcastService;
         _settingsValidator = settingsValidator;
         _notResolvedItems = new ConcurrentBag<int>();
+        _itemsResolveRequiredTrigger = ThrottlingTrigger.Setup()
+                                                        .Throttle(TimeSpan.FromMilliseconds(200))
+                                                        .Subscribe<EventArgs>(OnItemsResolveRequiredTrigger)
+                                                        .Create()
+                                                        .Activate();
 
         _broadcastService.Subscribe<SettingsChangedArgs<AzureSettings>>(OnSettingsChanged);
 
@@ -65,29 +83,23 @@ public class AzureService : BaseNotifyPropertyChanged,
         Application.Current.Dispatcher.Postpone(() => base.OnPropertyChanged(propertyName));
     }
 
-    public IReadOnlyList<AzureItem> GetItems(IEnumerable<int> ids)
+    public AzureItem GetItem(int id)
     {
-        return Array.Empty<AzureItem>();
-        /*
-        var keys = ids.Enumerate().Select(c => c.ToString()).ToList();
-        if (State.Status != SettingsStatus.Valid)
+        var settings = GetSettings();
+        if (settings == null)
         {
-            return Array.Empty<AzureItem>();
+            return null;
         }
 
-        var values = _cache.GetValues(keys);
-        var missedItems = keys.Except(values.Keys).Select(int.Parse);
-        foreach (var missedItem in missedItems)
+        var cachedValue = (AzureItem)_cache.Get(id.ToString());
+        if (cachedValue == null)
         {
-            _notResolvedItems.Add(missedItem);
-        }
-
-        if (_notResolvedItems.Any())
-        {
+            _notResolvedItems.Add(id);
             _itemsResolveRequiredTrigger.Trigger();
+            return null;
         }
 
-        return values.Values.OfType<AzureItem>().ToList();*/
+        return cachedValue;
     }
 
     public void InvalidateSettings()
@@ -103,13 +115,28 @@ public class AzureService : BaseNotifyPropertyChanged,
 
     private void OnItemsResolveRequiredTrigger(object sender, EventArgs e)
     {
+        var settings = GetSettings();
+        if (settings == null)
+        {
+            return;
+        }
+
         var notResolvedItems = new List<int>();
         while (_notResolvedItems.TryTake(out var item))
         {
             notResolvedItems.Add(item);
         }
 
-        var items = GetWorkItemsAsync(notResolvedItems.Distinct().ToArray()).GetAwaiter().GetResult();
+        IReadOnlyList<WorkItem> items;
+        try
+        {
+            items = Async.Run(async () => await GetWorkItemsAsync(notResolvedItems.Distinct().ToArray(), settings));
+        }
+        catch
+        {
+            return;
+        }
+
         foreach (var item in items)
         {
             if (!item.Id.HasValue)
@@ -117,26 +144,27 @@ public class AzureService : BaseNotifyPropertyChanged,
                 continue;
             }
 
-            int.TryParse(item.Fields[AzureFields.SYSTEM_PARENT]?.ToString(), out var parentId);
-            var type = item.Fields[AzureFields.SYSTEM_WORK_ITEM_TYPE] switch
+            int.TryParse(TryGetField(item.Fields, AzureFields.SYSTEM_PARENT)?.ToString(), out var parentId);
+            var type = TryGetField(item.Fields, AzureFields.SYSTEM_WORK_ITEM_TYPE) switch
             {
                 "Product Backlog Item" => AzureItemType.PBI,
                 "Task" => AzureItemType.Task,
                 "Bug" => AzureItemType.Bug,
-                _ => AzureItemType.Unknown
+                _ => AzureItemType.Unknown,
             };
 
             var azureItem = new AzureItem
             {
                 Id = item.Id.Value,
-                State = item.Fields[AzureFields.SYSTEM_STATE]?.ToString(),
-                Title = item.Fields[AzureFields.SYSTEM_TITLE]?.ToString(),
-                Release = item.Fields[AzureFields.CUSTOM_RELEASE]?.ToString(),
+                State = TryGetField(item.Fields, AzureFields.SYSTEM_STATE)?.ToString(),
+                Title = TryGetField(item.Fields, AzureFields.SYSTEM_TITLE)?.ToString(),
+                Release = TryGetField(item.Fields, AzureFields.CUSTOM_RELEASE)?.ToString(),
                 ParentId = parentId,
-                Type = type
+                Type = type,
             };
 
             _cache.Set(azureItem.Id.ToString(), azureItem, DateTimeOffset.Now + TimeSpan.FromDays(1));
+            _broadcastService.Broadcast(new AzureItemResolvedArgs(azureItem));
         }
     }
 
@@ -150,6 +178,11 @@ public class AzureService : BaseNotifyPropertyChanged,
                 : new ServiceState(false, string.Join(Environment.NewLine, validationResult.Errors.Select(e => e.ErrorMessage)));
 
             _settings = settings;
+            if (validationResult.IsValid)
+            {
+                _cacheRepository = new DefaultRepository(settings.CacheDirectory, false);
+                _cache = new FileCache(_cacheRepository);
+            }
         }
     }
 
@@ -157,26 +190,19 @@ public class AzureService : BaseNotifyPropertyChanged,
     {
         lock (this)
         {
-            if (State.IsValid != true)
-            {
-                throw new InvalidOperationException($"Settings are not valid. {State.Description}");
-            }
-
-            return _settings;
+            return State.IsValid == true ? _settings : null;
         }
     }
 
-    private async Task<IReadOnlyList<WorkItem>> GetWorkItemsAsync(params int[] items)
+    private async Task<IReadOnlyList<WorkItem>> GetWorkItemsAsync(IReadOnlyList<int> items, AzureSettings settings)
     {
-        return Array.Empty<WorkItem>();
-        /*
         if (!items.Any())
         {
             return Array.Empty<WorkItem>();
         }
 
-        var uri = new Uri("https://dev.azure.com/" + Settings.Project);
-        var credentials = new VssBasicCredential(string.Empty, Settings.Secret);
+        var uri = new Uri("https://dev.azure.com/" + settings.Project);
+        var credentials = new VssBasicCredential(string.Empty, settings.Secret);
 
         using var httpClient = new WorkItemTrackingHttpClient(uri, credentials);
 
@@ -201,80 +227,16 @@ public class AzureService : BaseNotifyPropertyChanged,
                               .Select(Convert.ToInt32)
                               .ToArray();
 
-            result.AddRange(await GetWorkItemsAsync(taskParents));
+            result.AddRange(await GetWorkItemsAsync(taskParents, settings));
         }
 
         result.AddRange(workItems);
 
-        return result;*/
+        return result;
     }
 
     private void OnSettingsChanged(SettingsChangedArgs<AzureSettings> args)
     {
         ApplySettings(args.Settings);
-        /*try
-        {
-            SetState(SettingsStatus.Checking, "Validating settings");
-            var validationResult = ValidateSettings((TSettings)settings);
-            if (validationResult == null)
-            {
-                SetState(SettingsStatus.Valid, "Settings are valid");
-            }
-            else
-            {
-                SetState(SettingsStatus.Invalid, validationResult.ErrorMessage);
-            }
-        }
-        catch (Exception exception)
-        {
-            SetState(SettingsStatus.Invalid, exception.GetBaseException().Message);
-        }*/
-    }
-
-    private ValidationResult ValidateSettings(AzureSettings settings)
-    {
-        return null;
-        /*try
-        {
-            if (string.IsNullOrEmpty(settings.Project))
-            {
-                return new ValidationResult("Project not set");
-            }
-
-            if (string.IsNullOrEmpty(settings.Secret))
-            {
-                return new ValidationResult("Secret not set");
-            }
-
-            if (string.IsNullOrEmpty(settings.CacheDirectory))
-            {
-                return new ValidationResult("Cache directory not set");
-            }
-
-            SetState(SettingsStatus.Checking, "Connecting to Azure with specified parameters");
-
-            var credentials = new VssBasicCredential(string.Empty, settings.Secret);
-            var uri = new Uri("https://dev.azure.com/" + settings.Project);
-
-            using var httpClient = new WorkItemTrackingHttpClient(uri, credentials);
-
-            httpClient.GetFieldAsync(AzureFields.SYSTEM_ID).GetAwaiter().GetResult();
-
-            var cleanupSettings = new CleanupSettings //Default settings defined in static CleanupSettings.Default property
-            {
-                GuarantyFileLifetimePeriod = TimeSpan.FromSeconds(5),
-                CleanupPeriod = TimeSpan.FromHours(1)
-            };
-
-            _cacheRepository?.Dispose();
-            _cacheRepository = new DefaultRepository(settings.CacheDirectory, cleanupSettings: cleanupSettings);
-            _cache = new FileCache(_cacheRepository);
-
-            return null;
-        }
-        catch (Exception e)
-        {
-            return new ValidationResult(e.GetBaseException().Message);
-        }*/
     }
 }

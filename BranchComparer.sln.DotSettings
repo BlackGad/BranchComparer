@@ -161,6 +161,10 @@
         &lt;Entry.Match&gt;&#xD;
           &lt;Kind Is="Delegate" /&gt;&#xD;
         &lt;/Entry.Match&gt;&#xD;
+        &lt;Entry.SortBy&gt;&#xD;
+          &lt;Access /&gt;&#xD;
+          &lt;Name /&gt;&#xD;
+        &lt;/Entry.SortBy&gt;&#xD;
       &lt;/Entry&gt;&#xD;
     &lt;/Group&gt;&#xD;
     &lt;Group DisplayName="Constants"&gt;&#xD;
@@ -256,6 +260,10 @@
             &lt;Override /&gt;&#xD;
           &lt;/And&gt;&#xD;
         &lt;/Entry.Match&gt;&#xD;
+        &lt;Entry.SortBy&gt;&#xD;
+          &lt;Access /&gt;&#xD;
+          &lt;Name /&gt;&#xD;
+        &lt;/Entry.SortBy&gt;&#xD;
       &lt;/Entry&gt;&#xD;
     &lt;/Group&gt;&#xD;
     &lt;Group DisplayName="${0} Members" Priority="100"&gt;&#xD;
@@ -270,7 +278,9 @@
           &lt;/And&gt;&#xD;
         &lt;/Entry.Match&gt;&#xD;
         &lt;Entry.SortBy&gt;&#xD;
-          &lt;ImplementsInterface Immediate="True" /&gt;&#xD;
+          &lt;ImplementsInterface /&gt;&#xD;
+          &lt;Access /&gt;&#xD;
+          &lt;Name /&gt;&#xD;
         &lt;/Entry.SortBy&gt;&#xD;
       &lt;/Entry&gt;&#xD;
     &lt;/Group&gt;&#xD;
@@ -301,6 +311,7 @@
           &lt;HandlesEvent /&gt;&#xD;
         &lt;/Entry.Match&gt;&#xD;
         &lt;Entry.SortBy&gt;&#xD;
+          &lt;Access /&gt;&#xD;
           &lt;Name /&gt;&#xD;
         &lt;/Entry.SortBy&gt;&#xD;
       &lt;/Entry&gt;&#xD;
@@ -333,7 +344,12 @@
         &lt;/Entry.SortBy&gt;&#xD;
       &lt;/Entry&gt;&#xD;
     &lt;/Group&gt;&#xD;
-    &lt;Entry DisplayName="Entry" Priority="0" /&gt;&#xD;
+    &lt;Entry DisplayName="Entry" Priority="0"&gt;&#xD;
+      &lt;Entry.SortBy&gt;&#xD;
+        &lt;Access /&gt;&#xD;
+        &lt;Name /&gt;&#xD;
+      &lt;/Entry.SortBy&gt;&#xD;
+    &lt;/Entry&gt;&#xD;
     &lt;Region Name="Nested type: ${0}" Priority="25"&gt;&#xD;
       &lt;Region.GroupBy&gt;&#xD;
         &lt;Name /&gt;&#xD;

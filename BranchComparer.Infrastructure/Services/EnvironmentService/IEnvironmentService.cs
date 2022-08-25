@@ -1,6 +1,4 @@
-﻿using BranchComparer.Infrastructure.Services.GitService;
-
-namespace BranchComparer.Infrastructure.Services;
+﻿namespace BranchComparer.Infrastructure.Services.EnvironmentService;
 
 public interface IEnvironmentService
 {
@@ -8,13 +6,13 @@ public interface IEnvironmentService
 
     string LeftBranch { get; set; }
 
-    IReadOnlyList<Commit> LeftCommits { get; }
+    IReadOnlyList<IEnvironmentCommit> LeftCommits { get; }
 
     TimeSpan? Period { get; set; }
 
     string RightBranch { get; set; }
 
-    IReadOnlyList<Commit> RightCommits { get; }
+    IReadOnlyList<IEnvironmentCommit> RightCommits { get; }
 
     bool ShowUniqueCommits { get; set; }
 }

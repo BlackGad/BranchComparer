@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Autofac;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.EnvironmentService;
 using BranchComparer.Infrastructure.Services.GitService;
+using BranchComparer.ViewModels;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -24,19 +27,25 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
 {
     private readonly IBroadcastService _broadcastService;
     private readonly IGitService _gitService;
+    private readonly ILifetimeScope _scope;
     private readonly ThrottlingTrigger _updateAvailableBranchesTrigger;
     private readonly ThrottlingTrigger _updateFilterTrigger;
 
     private IReadOnlyList<string> _availableBranches;
     private string _leftBranch;
-    private IReadOnlyList<Commit> _leftCommits;
+    private IReadOnlyList<IEnvironmentCommit> _leftCommits;
     private TimeSpan? _period;
     private string _rightBranch;
-    private IReadOnlyList<Commit> _rightCommits;
+    private IReadOnlyList<IEnvironmentCommit> _rightCommits;
     private bool _showUniqueCommits;
 
-    public EnvironmentService(ISettingsService settingsService, IGitService gitService, IBroadcastService broadcastService)
+    public EnvironmentService(
+        ILifetimeScope scope,
+        ISettingsService settingsService,
+        IGitService gitService,
+        IBroadcastService broadcastService)
     {
+        _scope = scope;
         _gitService = gitService;
         _broadcastService = broadcastService;
         _broadcastService.Subscribe<ServiceStateChangedArgs<IGitService>>(GitServiceStateChanged);
@@ -56,32 +65,6 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
         settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
 
         _updateAvailableBranchesTrigger.Trigger();
-    }
-
-    [JsonProperty]
-    public TimeSpan? Period
-    {
-        get { return _period; }
-        set
-        {
-            if (SetField(ref _period, value))
-            {
-                _updateFilterTrigger.Trigger();
-            }
-        }
-    }
-
-    [JsonProperty]
-    public bool ShowUniqueCommits
-    {
-        get { return _showUniqueCommits; }
-        set
-        {
-            if (SetField(ref _showUniqueCommits, value))
-            {
-                _updateFilterTrigger.Trigger();
-            }
-        }
     }
 
     protected override void OnPropertyChanged(string propertyName = null)
@@ -115,6 +98,25 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
         }
     }
 
+    public IReadOnlyList<IEnvironmentCommit> LeftCommits
+    {
+        get { return _leftCommits; }
+        private set { SetField(ref _leftCommits, value); }
+    }
+
+    [JsonProperty]
+    public TimeSpan? Period
+    {
+        get { return _period; }
+        set
+        {
+            if (SetField(ref _period, value))
+            {
+                _updateFilterTrigger.Trigger();
+            }
+        }
+    }
+
     [JsonProperty]
     public string RightBranch
     {
@@ -128,16 +130,23 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
         }
     }
 
-    public IReadOnlyList<Commit> LeftCommits
-    {
-        get { return _leftCommits; }
-        private set { SetField(ref _leftCommits, value); }
-    }
-
-    public IReadOnlyList<Commit> RightCommits
+    public IReadOnlyList<IEnvironmentCommit> RightCommits
     {
         get { return _rightCommits; }
         private set { SetField(ref _rightCommits, value); }
+    }
+
+    [JsonProperty]
+    public bool ShowUniqueCommits
+    {
+        get { return _showUniqueCommits; }
+        set
+        {
+            if (SetField(ref _showUniqueCommits, value))
+            {
+                _updateFilterTrigger.Trigger();
+            }
+        }
     }
 
     private void OnUpdateAvailableBranchesTriggered(object sender, EventArgs e)
@@ -171,13 +180,13 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
                 rightCommits = _gitService.GetCommits(RightBranch, null);
             }
 
-            LeftCommits = FilterCommits(leftCommits).ToList();
-            RightCommits = FilterCommits(rightCommits).ToList();
+            LeftCommits = TransformCommits(FilterCommits(leftCommits));
+            RightCommits = TransformCommits(FilterCommits(rightCommits));
         }
         catch
         {
-            LeftCommits = Array.Empty<Commit>();
-            RightCommits = Array.Empty<Commit>();
+            LeftCommits = Array.Empty<IEnvironmentCommit>();
+            RightCommits = Array.Empty<IEnvironmentCommit>();
         }
     }
 
@@ -195,5 +204,19 @@ internal class EnvironmentService : BaseNotifyPropertyChanged,
     private void GitServiceStateChanged(ServiceStateChangedArgs<IGitService> args)
     {
         _updateAvailableBranchesTrigger.Trigger();
+    }
+
+    private IReadOnlyList<IEnvironmentCommit> TransformCommits(IEnumerable<Commit> commits)
+    {
+        return commits.Select(c => new EnvironmentCommitViewModel
+        {
+            Id = c.Id,
+            Author = c.Author,
+            Message = c.Message,
+            ShortMessage = c.MessageShort,
+            Time = c.Time,
+            PR = c.MergedPR.HasValue ? _scope.Resolve<EnvironmentCommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null,
+            RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<EnvironmentCommitRelatedItemViewModel>(TypedParameter.From(i))).ToList(),
+        }).ToList();
     }
 }
