@@ -14,7 +14,7 @@
     </ControlTemplate>
 
     <Style x:Key="{x:Static controls:TilesContentControlItem+Resource.ControlStyle}" TargetType="controls:TilesContentControlItem">
-        <Setter Property="Padding" Value="2" />
+        <Setter Property="Padding" Value="3" />
         <Setter Property="Background" Value="{theme:Brush MainForeground}" />
         <Setter Property="Template" Value="{StaticResource {x:Static controls:TilesContentControlItem+Resource.ControlTemplate}}" />
     </Style>
