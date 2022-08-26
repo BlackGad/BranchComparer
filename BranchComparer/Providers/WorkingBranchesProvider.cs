@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -6,8 +6,8 @@ using Autofac;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.EnvironmentService;
 using BranchComparer.Infrastructure.Services.GitService;
+using BranchComparer.Services.FilterService;
 using BranchComparer.Settings;
 using BranchComparer.ViewModels;
 using PS.Extensions;
@@ -71,8 +71,8 @@ internal class WorkingBranchesProvider : IDisposable
 
     private void OnUpdateModelsTriggered(object sender, EventArgs e)
     {
-        IReadOnlyList<IEnvironmentCommit> leftBranch;
-        IReadOnlyList<IEnvironmentCommit> rightBranch;
+        IReadOnlyList<CommitViewModel> leftBranch;
+        IReadOnlyList<CommitViewModel> rightBranch;
 
         try
         {
@@ -120,8 +120,8 @@ internal class WorkingBranchesProvider : IDisposable
         }
         catch
         {
-            leftBranch = Array.Empty<IEnvironmentCommit>();
-            rightBranch = Array.Empty<IEnvironmentCommit>();
+            leftBranch = Array.Empty<CommitViewModel>();
+            rightBranch = Array.Empty<CommitViewModel>();
         }
 
         Application.Current.Dispatcher.Postpone(() =>
@@ -151,7 +151,7 @@ internal class WorkingBranchesProvider : IDisposable
         _updateModelsTrigger.Trigger();
     }
 
-    private IEnumerable<IEnvironmentCommit> TransformCommits(
+    private IEnumerable<CommitViewModel> TransformCommits(
         IEnumerable<Commit> commits,
         Dictionary<Commit, string> cherryPickSources,
         Dictionary<Commit, string> cherryPickTargets)

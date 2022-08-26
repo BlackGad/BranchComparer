@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:commitsView="clr-namespace:BranchComparer.Controls.CommitsView"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:environmentService="clr-namespace:BranchComparer.Infrastructure.Services.EnvironmentService;assembly=BranchComparer.Infrastructure"
         xmlns:infrastructure="clr-namespace:BranchComparer.Infrastructure;assembly=BranchComparer.Infrastructure"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
@@ -76,7 +75,7 @@
                                          ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH}}"
                                          LayoutFlowDirection="LeftToRight">
                     <commitsView:CommitsView.ItemTemplate>
-                        <DataTemplate DataType="environmentService:IEnvironmentCommit">
+                        <DataTemplate DataType="viewModels:CommitViewModel">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="70" />
@@ -113,7 +112,7 @@
                                          Focusable="False"
                                          ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH}}">
                     <commitsView:CommitsView.ItemTemplate>
-                        <DataTemplate DataType="environmentService:IEnvironmentCommit">
+                        <DataTemplate DataType="viewModels:CommitViewModel">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="70" />

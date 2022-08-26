@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.EnvironmentService;
 using BranchComparer.Settings;
+using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
 
-namespace BranchComparer.Services;
+namespace BranchComparer.Services.FilterService;
 
 [DependencyRegisterAsInterface(typeof(IFilterService))]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
@@ -19,7 +19,7 @@ internal class FilterService : IFilterService
         _settingsService = settingsService;
     }
 
-    public IReadOnlyList<IEnvironmentCommit> FilterCommits(IEnumerable<IEnvironmentCommit> commits)
+    public IReadOnlyList<CommitViewModel> FilterCommits(IEnumerable<CommitViewModel> commits)
     {
         var settings = _settingsService.GetSettings<FilterSettings>();
         if (settings.Period.HasValue)

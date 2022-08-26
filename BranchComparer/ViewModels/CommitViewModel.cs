@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using BranchComparer.Infrastructure.Services.EnvironmentService;
 using PS;
 
 namespace BranchComparer.ViewModels;
 
-public class CommitViewModel : BaseNotifyPropertyChanged,
-                                          IEnvironmentCommit
+public class CommitViewModel : BaseNotifyPropertyChanged
 {
     private string _author;
     private string _cherryPickSource;
