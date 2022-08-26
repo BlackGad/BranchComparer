@@ -51,7 +51,7 @@
         </Setter>
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="Template" Value="{StaticResource {x:Static commitsView:CommitsView+Resource.ControlTemplate}}" />
+        <!--<Setter Property="Template" Value="{StaticResource {x:Static commitsView:CommitsView+Resource.ControlTemplate}}" />-->
         <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
     </Style>
 

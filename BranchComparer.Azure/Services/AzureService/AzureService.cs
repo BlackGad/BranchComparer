@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.Caching;
 using System.Windows;
+using BranchComparer.Azure.Settings;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.AzureService;
@@ -37,29 +38,42 @@ public class AzureService : BaseNotifyPropertyChanged,
         return null;
     }
 
+    private readonly ThrottlingTrigger _applySettingsTrigger;
     private readonly IBroadcastService _broadcastService;
     private readonly ThrottlingTrigger _itemsResolveRequiredTrigger;
     private readonly ConcurrentBag<int> _notResolvedItems;
+
+    private readonly ISettingsService _settingsService;
     private readonly IValidator<AzureSettings> _settingsValidator;
     private ObjectCache _cache;
     private DefaultRepository _cacheRepository;
-    private AzureSettings _settings;
     private ServiceState _state;
 
-    public AzureService(ISettingsService settingsService, IBroadcastService broadcastService, IValidator<AzureSettings> settingsValidator)
+    public AzureService(
+        ISettingsService settingsService,
+        IBroadcastService broadcastService,
+        IValidator<AzureSettings> settingsValidator)
     {
+        _settingsService = settingsService;
         _broadcastService = broadcastService;
         _settingsValidator = settingsValidator;
         _notResolvedItems = new ConcurrentBag<int>();
         _itemsResolveRequiredTrigger = ThrottlingTrigger.Setup()
-                                                        .Throttle(TimeSpan.FromMilliseconds(200))
+                                                        .Throttle(TimeSpan.FromMilliseconds(100))
                                                         .Subscribe<EventArgs>(OnItemsResolveRequiredTrigger)
                                                         .Create()
                                                         .Activate();
+        _applySettingsTrigger = ThrottlingTrigger.Setup()
+                                                 .Throttle(TimeSpan.FromMilliseconds(100))
+                                                 .Subscribe<EventArgs>(OnApplySettingsTrigger)
+                                                 .Create()
+                                                 .Activate();
 
         _broadcastService.Subscribe<SettingsChangedArgs<AzureSettings>>(OnSettingsChanged);
 
-        ApplySettings(settingsService.GetSettings<AzureSettings>());
+        _applySettingsTrigger.Trigger();
+
+        State = new ServiceState(null, "Unknown");
     }
 
     public ServiceState State
@@ -73,8 +87,6 @@ public class AzureService : BaseNotifyPropertyChanged,
                 var args = Activator.CreateInstance(eventType, _state);
                 _broadcastService.Broadcast(eventType, args);
             }
-
-            Application.Current.Dispatcher.Postpone(() => OnPropertyChanged(nameof(State)));
         }
     }
 
@@ -85,38 +97,57 @@ public class AzureService : BaseNotifyPropertyChanged,
 
     public AzureItem GetItem(int id)
     {
-        var settings = GetSettings();
+        var settings = _settingsService.GetSettings<AzureSettings>();
         if (settings == null)
         {
             return null;
         }
 
-        var cachedValue = (AzureItem)_cache.Get(id.ToString());
-        if (cachedValue == null)
+        if (_cache?.Get(id.ToString()) is AzureItem cachedValue)
         {
-            _notResolvedItems.Add(id);
-            _itemsResolveRequiredTrigger.Trigger();
-            return null;
+            return cachedValue;
         }
 
-        return cachedValue;
+        _notResolvedItems.Add(id);
+        _itemsResolveRequiredTrigger.Trigger();
+
+        return null;
     }
 
     public void InvalidateSettings()
     {
-        ApplySettings(_settings);
+        _applySettingsTrigger.Trigger();
     }
 
     public void Dispose()
     {
         _broadcastService.Unsubscribe<SettingsChangedArgs<AzureSettings>>(OnSettingsChanged);
         _cacheRepository?.Dispose();
+        _applySettingsTrigger.Dispose();
+        _itemsResolveRequiredTrigger.Dispose();
+    }
+
+    private void OnApplySettingsTrigger(object sender, EventArgs e)
+    {
+        var settings = _settingsService.GetSettings<AzureSettings>();
+        var validationResult = Async.Run(async () => await _settingsValidator.ValidateAsync(settings));
+
+        State = validationResult.IsValid
+            ? new ServiceState(true, "Settings are valid")
+            : new ServiceState(false, string.Join(Environment.NewLine, validationResult.Errors.Select(error => error.ErrorMessage)));
+
+        if (validationResult.IsValid)
+        {
+            _cacheRepository = new DefaultRepository(settings.CacheDirectory, false);
+            _cache = new FileCache(_cacheRepository);
+        }
+
+        _itemsResolveRequiredTrigger.Trigger();
     }
 
     private void OnItemsResolveRequiredTrigger(object sender, EventArgs e)
     {
-        var settings = GetSettings();
-        if (settings == null)
+        if (State.IsValid != true)
         {
             return;
         }
@@ -127,10 +158,24 @@ public class AzureService : BaseNotifyPropertyChanged,
             notResolvedItems.Add(item);
         }
 
+        notResolvedItems = notResolvedItems.Distinct().ToList();
+
+        if (_cache != null)
+        {
+            var values = _cache.GetValues(notResolvedItems.Select(i => i.ToString()));
+            foreach (var azureItem in values.Values.OfType<AzureItem>())
+            {
+                _broadcastService.Broadcast(new AzureItemResolvedArgs(azureItem));
+            }
+
+            notResolvedItems = notResolvedItems.Except(values.Keys.Select(int.Parse)).ToList();
+        }
+
         IReadOnlyList<WorkItem> items;
         try
         {
-            items = Async.Run(async () => await GetWorkItemsAsync(notResolvedItems.Distinct().ToArray(), settings));
+            var settings = _settingsService.GetSettings<AzureSettings>();
+            items = Async.Run(async () => await GetWorkItemsAsync(notResolvedItems.ToArray(), settings));
         }
         catch
         {
@@ -165,32 +210,6 @@ public class AzureService : BaseNotifyPropertyChanged,
 
             _cache.Set(azureItem.Id.ToString(), azureItem, DateTimeOffset.Now + TimeSpan.FromDays(1));
             _broadcastService.Broadcast(new AzureItemResolvedArgs(azureItem));
-        }
-    }
-
-    private void ApplySettings(AzureSettings settings)
-    {
-        var validationResult = Async.Run(async () => await _settingsValidator.ValidateAsync(settings));
-        lock (this)
-        {
-            State = validationResult.IsValid
-                ? new ServiceState(true, "Settings are valid")
-                : new ServiceState(false, string.Join(Environment.NewLine, validationResult.Errors.Select(e => e.ErrorMessage)));
-
-            _settings = settings;
-            if (validationResult.IsValid)
-            {
-                _cacheRepository = new DefaultRepository(settings.CacheDirectory, false);
-                _cache = new FileCache(_cacheRepository);
-            }
-        }
-    }
-
-    private AzureSettings GetSettings()
-    {
-        lock (this)
-        {
-            return State.IsValid == true ? _settings : null;
         }
     }
 
@@ -237,6 +256,6 @@ public class AzureService : BaseNotifyPropertyChanged,
 
     private void OnSettingsChanged(SettingsChangedArgs<AzureSettings> args)
     {
-        ApplySettings(args.Settings);
+        _applySettingsTrigger.Trigger();
     }
 }

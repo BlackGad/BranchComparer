@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using BranchComparer.Git.Services.GitService;
+using BranchComparer.Git.Settings;
 using FluentValidation;
 using LibGit2Sharp;
 using PS.IoC.Attributes;

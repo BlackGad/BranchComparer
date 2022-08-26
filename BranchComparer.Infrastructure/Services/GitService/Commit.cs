@@ -21,19 +21,30 @@ public record Commit
         MessageShort = messageShort;
         Message = message.Trim('\r', '\n', '\t', ' ');
 
-        var mergedPRMatch = Regex.Match(message, @"^(Merged PR ([0-9]+):\s*)");
-        if (mergedPRMatch.Success && int.TryParse(mergedPRMatch.Groups[2].Value, out var parsedMergedPR))
-        {
-            MergedPR = parsedMergedPR;
-            MessageShort = MessageShort.Replace(mergedPRMatch.Groups[1].Value, string.Empty);
-        }
-
         RelatedItems = Regex.Matches(message, @"#([0-9]+)")
                             .Where(m => m.Success)
                             .Select(m => int.TryParse(m.Groups[1].Value, out var parsed) ? parsed : int.MaxValue)
                             .Where(v => v != int.MaxValue)
                             .Distinct()
                             .ToList();
+
+        var extraCommitMatch = Regex.Match(message, @"^(Commit ([0-9a-fA-F]+):\s*)");
+        if (extraCommitMatch.Success)
+        {
+            var value = extraCommitMatch.Groups[1].Value;
+            message = message.Replace(value, string.Empty);
+            MessageShort = MessageShort.Replace(value, string.Empty);
+        }
+
+        var mergedPRMatch = Regex.Match(message, @"^(Merged PR ([0-9]+):\s*)");
+        if (mergedPRMatch.Success && int.TryParse(mergedPRMatch.Groups[2].Value, out var parsedMergedPR))
+        {
+            MergedPR = parsedMergedPR;
+            
+            var value = mergedPRMatch.Groups[1].Value;
+            message = MessageShort.Replace(value, string.Empty);
+            MessageShort = MessageShort.Replace(value, string.Empty);
+        }
     }
 
     public string Author { get; }

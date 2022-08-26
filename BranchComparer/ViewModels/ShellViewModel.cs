@@ -1,5 +1,5 @@
 ﻿using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.EnvironmentService;
+using BranchComparer.Settings;
 using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
@@ -12,17 +12,17 @@ public class ShellViewModel : BaseNotifyPropertyChanged,
                               ITitleAware,
                               IViewModel
 {
-    public ShellViewModel(IBusyService busyService, IEnvironmentService environmentService)
+    public ShellViewModel(IBusyService busyService, ISettingsService settingsService)
     {
         BusyService = busyService;
-        EnvironmentService = environmentService;
 
         Title = App.GetApplicationTitle();
+        BranchSettings = settingsService.GetObservableSettings<BranchSettings>();
     }
 
     public IBusyService BusyService { get; }
 
-    public IEnvironmentService EnvironmentService { get; }
+    public BranchSettings BranchSettings { get; }
 
     public string Title { get; }
 }

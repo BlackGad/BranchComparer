@@ -1,4 +1,5 @@
-﻿using BranchComparer.Git.Services.GitService;
+﻿using BranchComparer.Git.Services;
+using BranchComparer.Git.Settings;
 using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 using PS;

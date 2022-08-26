@@ -5,10 +5,10 @@ using PS.MVVM.Patterns;
 namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
-public class EnvironmentCommitPRViewModel : BaseNotifyPropertyChanged,
+public class CommitPRViewModel : BaseNotifyPropertyChanged,
                                             IViewModel
 {
-    public EnvironmentCommitPRViewModel(int id)
+    public CommitPRViewModel(int id)
     {
         Id = id;
     }

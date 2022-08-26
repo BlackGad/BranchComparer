@@ -1,4 +1,5 @@
 ﻿using BranchComparer.Azure.Services.AzureService;
+using BranchComparer.Azure.Settings;
 using FluentValidation;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.VisualStudio.Services.Common;

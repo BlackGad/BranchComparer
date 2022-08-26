@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using BranchComparer.Git.Settings;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
@@ -12,7 +13,7 @@ using PS.Threading;
 using PS.WPF.Extensions;
 using Commit = BranchComparer.Infrastructure.Services.GitService.Commit;
 
-namespace BranchComparer.Git.Services.GitService;
+namespace BranchComparer.Git.Services;
 
 [DependencyRegisterAsInterface(typeof(IGitService))]
 [DependencyRegisterAsSelf]

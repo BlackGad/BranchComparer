@@ -52,28 +52,28 @@
                                     Grid.Column="0"
                                     Orientation="Vertical">
                     <ps:HeaderedContent.Header>
-                        <TextBlock Text="{Binding EnvironmentService.LeftCommits.Count, StringFormat=Branch({0})}" />
+                        <TextBlock Text="Left branch" />
                     </ps:HeaderedContent.Header>
                     <ps:AutoCompleteBox AllowFreeItem="True"
-                                        ItemsSource="{Binding EnvironmentService.AvailableBranches}"
-                                        SelectedItem="{Binding EnvironmentService.LeftBranch}" />
+                                        ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
+                                        SelectedItem="{Binding BranchSettings.Left}" />
                 </ps:HeaderedContent>
 
                 <ps:HeaderedContent Grid.Row="0"
                                     Grid.Column="2"
                                     Orientation="Vertical">
                     <ps:HeaderedContent.Header>
-                        <TextBlock Text="{Binding EnvironmentService.RightCommits.Count, StringFormat=Branch({0})}" />
+                        <TextBlock Text="Right branch" />
                     </ps:HeaderedContent.Header>
                     <ps:AutoCompleteBox AllowFreeItem="True"
-                                        ItemsSource="{Binding EnvironmentService.AvailableBranches}"
-                                        SelectedItem="{Binding EnvironmentService.RightBranch}" />
+                                        ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
+                                        SelectedItem="{Binding BranchSettings.Right}" />
                 </ps:HeaderedContent>
 
                 <commitsView:CommitsView Grid.Row="1"
                                          Grid.Column="0"
                                          Focusable="False"
-                                         ItemsSource="{Binding EnvironmentService.LeftCommits}"
+                                         ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH}}"
                                          LayoutFlowDirection="LeftToRight">
                     <commitsView:CommitsView.ItemTemplate>
                         <DataTemplate DataType="environmentService:IEnvironmentCommit">
@@ -111,18 +111,17 @@
                 <commitsView:CommitsView Grid.Row="1"
                                          Grid.Column="2"
                                          Focusable="False"
-                                         ItemsSource="{Binding EnvironmentService.RightCommits}"
-                                         LayoutFlowDirection="RightToLeft">
+                                         ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH}}">
                     <commitsView:CommitsView.ItemTemplate>
                         <DataTemplate DataType="environmentService:IEnvironmentCommit">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition />
-                                    <ColumnDefinition Width="140" />
                                     <ColumnDefinition Width="70" />
+                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <ContentControl Grid.Column="0"
+                                <ContentControl Grid.Column="2"
                                                 VerticalAlignment="Top"
                                                 ContentTemplateSelector="{mvvm:TemplateResolver}"
                                                 Content="{Binding}" />
@@ -137,7 +136,7 @@
                                     </ItemsControl.ItemsPanel>
                                 </ItemsControl>
 
-                                <ContentControl Grid.Column="2"
+                                <ContentControl Grid.Column="0"
                                                 VerticalAlignment="Top"
                                                 ContentTemplateSelector="{mvvm:TemplateResolver}"
                                                 Content="{Binding PR}" />

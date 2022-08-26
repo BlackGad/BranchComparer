@@ -15,7 +15,7 @@
     <StackPanel ps:HeaderedContent.HeaderColumnWidth="150" ps:HeaderedContent.IsResizable="False">
         <ps:HeaderedContent Header="Period">
             <ComboBox DisplayMemberPath="Title"
-                      SelectedValue="{Binding EnvironmentService.Period, Mode=TwoWay}"
+                      SelectedValue="{Binding Settings.Period, Mode=TwoWay}"
                       SelectedValuePath="Payload">
                 <ps:TitledObject Title="1 Day">
                     <ps:TitledObject.Payload>
@@ -36,7 +36,7 @@
             </ComboBox>
         </ps:HeaderedContent>
         <ps:HeaderedContent Header="Show unique commits">
-            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding EnvironmentService.ShowUniqueCommits}" />
+            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding Settings.ShowUniqueCommits}" />
         </ps:HeaderedContent>
         <Separator />
     </StackPanel>

@@ -1,4 +1,5 @@
 ﻿using BranchComparer.Azure.Services.AzureService;
+using BranchComparer.Azure.Settings;
 using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 using PS;

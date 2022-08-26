@@ -47,8 +47,8 @@ public class MainModule : Module
                    style: Infrastructure.Resources.XamlResources.ConfirmationStyle);
 
         service.AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
-               .AssociateTemplate<EnvironmentCommitViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitView>>())
-               .AssociateTemplate<EnvironmentCommitPRViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitPRView>>())
-               .AssociateTemplate<EnvironmentCommitRelatedItemViewModel>(scope.Resolve<IDataTemplate<EnvironmentCommitRelatedItemView>>());
+               .AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
+               .AssociateTemplate<CommitPRViewModel>(scope.Resolve<IDataTemplate<CommitPRView>>())
+               .AssociateTemplate<CommitRelatedItemViewModel>(scope.Resolve<IDataTemplate<CommitRelatedItemView>>());
     }
 }

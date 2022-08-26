@@ -1,12 +1,11 @@
 ﻿using System.IO;
 using System.Reflection;
+using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
-using PS;
 
-namespace BranchComparer.Azure.Services.AzureService;
+namespace BranchComparer.Azure.Settings;
 
-public class AzureSettings : BaseNotifyPropertyChanged,
-                             ICloneable
+public class AzureSettings : AbstractSettings
 {
     private string _cacheDirectory;
     private string _project;
@@ -39,11 +38,5 @@ public class AzureSettings : BaseNotifyPropertyChanged,
     {
         get { return _secret; }
         set { SetField(ref _secret, value); }
-    }
-
-    object ICloneable.Clone()
-    {
-        var serialized = JsonConvert.SerializeObject(this);
-        return JsonConvert.DeserializeObject<AzureSettings>(serialized) ?? new AzureSettings();
     }
 }

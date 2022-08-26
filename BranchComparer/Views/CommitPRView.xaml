@@ -1,4 +1,4 @@
-﻿<tilesContentControl:TilesContentControl x:Class="BranchComparer.Views.EnvironmentCommitPRView"
+﻿<tilesContentControl:TilesContentControl x:Class="BranchComparer.Views.CommitPRView"
                                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                          xmlns:commitsView="clr-namespace:BranchComparer.Controls.CommitsView"
@@ -7,7 +7,7 @@
                                          xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
                                          xmlns:tilesContentControl="clr-namespace:BranchComparer.Controls.TilesContentControl"
                                          xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
-                                         d:DataContext="{d:DesignInstance viewModels:EnvironmentCommitPRViewModel}"
+                                         d:DataContext="{d:DesignInstance viewModels:CommitPRViewModel}"
                                          Focusable="False"
                                          LayoutFlowDirection="{Binding RelativeSource={RelativeSource AncestorType=commitsView:CommitsView}, Path=LayoutFlowDirection}"
                                          mc:Ignorable="d">

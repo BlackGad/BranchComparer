@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
@@ -64,7 +63,7 @@ internal class SettingsService : ISettingsService,
     }
 
     public T GetObservableSettings<T>()
-        where T : INotifyPropertyChanged, ICloneable
+        where T : AbstractSettings
     {
         lock (_settings)
         {
@@ -81,7 +80,7 @@ internal class SettingsService : ISettingsService,
     }
 
     public T GetSettings<T>()
-        where T : INotifyPropertyChanged, ICloneable
+        where T : AbstractSettings
     {
         return (T)GetObservableSettings<T>().Clone();
     }

@@ -1,5 +1,5 @@
 ﻿using BranchComparer.Infrastructure.Services;
-using BranchComparer.Infrastructure.Services.EnvironmentService;
+using BranchComparer.Settings;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -14,16 +14,13 @@ public class FilterViewModel : BaseNotifyPropertyChanged,
 {
     private bool _isExpanded;
 
-    public FilterViewModel(ISettingsService settingsService, IEnvironmentService environmentService)
+    public FilterViewModel(ISettingsService settingsService)
     {
-        EnvironmentService = environmentService;
-
         _isExpanded = true;
 
         settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
+        Settings = settingsService.GetObservableSettings<FilterSettings>();
     }
-
-    public IEnvironmentService EnvironmentService { get; }
 
     [JsonProperty]
     public bool IsExpanded
@@ -31,4 +28,6 @@ public class FilterViewModel : BaseNotifyPropertyChanged,
         get { return _isExpanded; }
         set { SetField(ref _isExpanded, value); }
     }
+
+    public FilterSettings Settings { get; }
 }

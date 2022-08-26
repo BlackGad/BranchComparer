@@ -1,14 +1,12 @@
-﻿using System.ComponentModel;
-
-namespace BranchComparer.Infrastructure.Services;
+﻿namespace BranchComparer.Infrastructure.Services;
 
 public interface ISettingsService
 {
     T GetObservableSettings<T>()
-        where T : INotifyPropertyChanged, ICloneable;
+        where T : AbstractSettings;
 
     T GetSettings<T>()
-        where T : INotifyPropertyChanged, ICloneable;
+        where T : AbstractSettings;
 
     void LoadPopulateAndSaveOnDispose(string key, object item);
 }

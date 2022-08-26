@@ -6,7 +6,7 @@ using PS;
 
 namespace BranchComparer.ViewModels;
 
-public class EnvironmentCommitViewModel : BaseNotifyPropertyChanged,
+public class CommitViewModel : BaseNotifyPropertyChanged,
                                           IEnvironmentCommit
 {
     private string _author;
@@ -19,7 +19,7 @@ public class EnvironmentCommitViewModel : BaseNotifyPropertyChanged,
     private string _shortMessage;
     private DateTimeOffset _time;
 
-    public EnvironmentCommitViewModel()
+    public CommitViewModel()
     {
         RelatedItems = new ObservableCollection<object>();
     }

@@ -12,7 +12,7 @@ using PS.WPF.Extensions;
 namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
-public class EnvironmentCommitRelatedItemViewModel : BaseNotifyPropertyChanged,
+public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
                                                      IViewModel,
                                                      ILoadedAware,
                                                      IUnloadedAware
@@ -26,7 +26,7 @@ public class EnvironmentCommitRelatedItemViewModel : BaseNotifyPropertyChanged,
 
     private AzureItemType _type;
 
-    public EnvironmentCommitRelatedItemViewModel(int id, IAzureService azureService, IBroadcastService broadcastService)
+    public CommitRelatedItemViewModel(int id, IAzureService azureService, IBroadcastService broadcastService)
     {
         _azureService = azureService;
         _broadcastService = broadcastService;
