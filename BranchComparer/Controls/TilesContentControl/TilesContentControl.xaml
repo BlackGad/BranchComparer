@@ -18,6 +18,7 @@
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
+        <Setter Property="Margin" Value="1" />
         <Setter Property="Template" Value="{StaticResource {x:Static tilesContentControl:TilesContentControl+Resource.ControlTemplate}}" />
     </Style>
 

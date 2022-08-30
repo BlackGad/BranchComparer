@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using PS.Extensions;
 using PS.WPF.Extensions;
 using PS.WPF.Resources;
@@ -94,6 +95,13 @@ public class TilesContentControl : ItemsControl
     protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
     {
         base.PrepareContainerForItemOverride(element, item);
+        element.SetBindingIfDefault(BorderBrushProperty,
+                                    new Binding
+                                    {
+                                        Source = this,
+                                        Path = new PropertyPath(BorderBrushProperty),
+                                    });
+
         Dispatcher.Postpone(UpdateItems);
     }
 

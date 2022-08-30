@@ -4,6 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
+        xmlns:ps="http://schemas.ps.com/2019/xaml"
+        xmlns:psResources="clr-namespace:PS.WPF.Resources;assembly=PS.WPF"
+        xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
         xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
         xmlns:tilesContentControl="clr-namespace:BranchComparer.Controls.TilesContentControl"
         xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
@@ -12,18 +15,31 @@
         CornerRadius="5"
         Focusable="False"
         mc:Ignorable="d">
-    <Grid>
+    <Border.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <psResources:SharedResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Border.Resources>
+    <Grid Margin="3">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="70" />
             <ColumnDefinition Width="150" />
             <ColumnDefinition />
-            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <Border x:Name="LeftCherryPickButton"
-                Grid.Column="0"
-                Background="Red" />
+        <ps:IconicButton x:Name="LeftCherryPickButton"
+                         Grid.Column="0"
+                         Width="15"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Background="{theme:Brush Main}"
+                         Geometry="{StaticResource {x:Static resources:Icons.CherryGeometry}}"
+                         IconWidth="12"
+                         Stretch="Uniform" />
 
         <ContentControl Grid.Column="1"
                         VerticalAlignment="Top"
@@ -39,17 +55,12 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
         </ItemsControl>
-        <!--<tilesContentControl:TilesContentControl Grid.Column="3"
-                                             VerticalAlignment="Top"
-                                             LayoutFlowDirection="{Binding RelativeSource={RelativeSource AncestorType=commitsView:CommitsView}, Path=LayoutFlowDirection}">-->
 
         <tilesContentControl:TilesContentControl Grid.Column="3" VerticalAlignment="Top">
-
             <tilesContentControl:TilesContentControl.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition Width="Auto" />
             </tilesContentControl:TilesContentControl.ColumnDefinitions>
-
             <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
                 <TextBlock Foreground="{theme:Brush Main}"
                            FontSize="{theme:FontSize S}"
@@ -67,27 +78,18 @@
                     </TextBlock.ToolTip>
                 </TextBlock>
             </tilesContentControl:TilesContentControlItem>
-
-            <!--<tilesContentControl:TilesContentControlItem Background="{theme:Brush Failure}" Visibility="{Binding CherryPickSource, Converter={StaticResource EmptyStringToVisibilityConverter}}">
-            <TextBlock Foreground="{theme:Brush Main}"
-                       FontSize="{theme:FontSize S}"
-                       Text="Source"
-                       TextTrimming="CharacterEllipsis"
-                       ToolTipService.InitialShowDelay="100" />
-        </tilesContentControl:TilesContentControlItem>
-
-        <tilesContentControl:TilesContentControlItem Background="{theme:Brush Failure}" Visibility="{Binding CherryPickTarget, Converter={StaticResource EmptyStringToVisibilityConverter}}">
-            <TextBlock Foreground="{theme:Brush Main}"
-                       FontSize="{theme:FontSize S}"
-                       Text="Target"
-                       TextTrimming="CharacterEllipsis"
-                       ToolTipService.InitialShowDelay="100" />
-        </tilesContentControl:TilesContentControlItem>-->
         </tilesContentControl:TilesContentControl>
 
         <Border x:Name="RightCherryPickButton"
                 Grid.Column="4"
-                Background="Red" />
+                Width="15">
+            <ps:IconicButton HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Background="{theme:Brush Main}"
+                             Geometry="{StaticResource {x:Static resources:Icons.CherryGeometry}}"
+                             IconWidth="12"
+                             Stretch="Uniform" />
+        </Border>
     </Grid>
 </Border>
 

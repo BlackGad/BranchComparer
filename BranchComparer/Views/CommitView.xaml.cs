@@ -43,17 +43,18 @@ public partial class CommitView : IView<CommitViewModel>
 
         Loaded += OnLoaded;
 
-        SetupCherryPickElement(LeftCherryPickButton, FlowDirection.LeftToRight);
-        SetupCherryPickElement(RightCherryPickButton, FlowDirection.RightToLeft);
+        SetupCherryPickElement(LeftCherryPickButton, FlowDirection.RightToLeft);
+        SetupCherryPickElement(RightCherryPickButton, FlowDirection.LeftToRight);
 
         var cherryPickBorderBrushBinding = CreateCherryPickBinding();
         cherryPickBorderBrushBinding.Converter = new RelayMultiValueConverter((objects, _, _, _) =>
         {
             var isPartOfCherryPick = objects.OfType<bool>().FirstOrDefault();
-            return isPartOfCherryPick ? Brushes.Red : Brushes.Transparent;
+            return isPartOfCherryPick ? CherryPicksAdorner.CherryPickBrush : Brushes.Transparent;
         });
 
-        SetBinding(BorderBrushProperty, cherryPickBorderBrushBinding);
+        SetBinding(BackgroundProperty, cherryPickBorderBrushBinding);
+        //SetBinding(BorderBrushProperty, cherryPickBorderBrushBinding);
     }
 
     public CommitViewModel ViewModel
@@ -72,17 +73,15 @@ public partial class CommitView : IView<CommitViewModel>
         visibilityBinding.Converter = new RelayMultiValueConverter((objects, _, _, _) =>
         {
             var flowDirection = objects.OfType<FlowDirection>().FirstOrDefault();
+            if (flowDirection != expectedFlowDirection)
+            {
+                return Visibility.Collapsed;
+            }
+
             var isPartOfCherryPick = objects.OfType<bool>().FirstOrDefault();
-            return isPartOfCherryPick && flowDirection != expectedFlowDirection
-                ? Visibility.Visible
-                : Visibility.Hidden;
+            return isPartOfCherryPick ? Visibility.Visible : Visibility.Hidden;
         });
 
         element.SetBinding(VisibilityProperty, visibilityBinding);
-
-        element.SetValue(CornerRadiusProperty,
-                         expectedFlowDirection == FlowDirection.RightToLeft
-                             ? new CornerRadius(0, 5, 5, 0)
-                             : new CornerRadius(5, 0, 0, 5));
     }
 }

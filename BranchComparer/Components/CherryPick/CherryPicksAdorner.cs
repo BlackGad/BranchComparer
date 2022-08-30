@@ -16,6 +16,8 @@ namespace BranchComparer.Components.CherryPick;
 [DependencyRegisterAsSelf]
 public class CherryPicksAdorner : Adorner
 {
+    public static readonly Brush CherryPickBrush = new SolidColorBrush(Color.FromArgb(100, 230, 0, 0));
+
     private readonly IModelResolverService _modelResolverService;
 
     private readonly List<WeakReference> _views;
@@ -67,15 +69,8 @@ public class CherryPicksAdorner : Adorner
             }
 
             drawingContext.DrawDrawing(new GeometryDrawing());
-            drawingContext.DrawLine(new Pen(Brushes.Red, 2), sourcePoint, targetPoint);
+            drawingContext.DrawLine(new Pen(CherryPickBrush, 2), sourcePoint, targetPoint);
         }
-
-        /*if (AdornedElement.GetType() == typeof(ConnectorView))
-        {
-            ConnectorView target = this.AdornedElement as ConnectorView;
-            drawingContext.DrawEllipse(Brushes.Black, null, target.StartPoint, 4, 4);
-            drawingContext.DrawEllipse(Brushes.Black, null, target.EndPoint, 4, 4);
-        }*/
     }
 
     public void AddLoadedView(CommitView view)
