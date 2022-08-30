@@ -20,9 +20,9 @@ public class ShellViewModel : BaseNotifyPropertyChanged,
         BranchSettings = settingsService.GetObservableSettings<BranchSettings>();
     }
 
-    public IBusyService BusyService { get; }
-
     public BranchSettings BranchSettings { get; }
+
+    public IBusyService BusyService { get; }
 
     public string Title { get; }
 }

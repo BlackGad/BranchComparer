@@ -8,18 +8,19 @@ namespace BranchComparer.ViewModels;
 public class CommitViewModel : BaseNotifyPropertyChanged
 {
     private string _author;
-    private string _cherryPickSource;
-    private string _cherryPickTarget;
+    private DateTimeOffset _authorTime;
+
+    private WeakReference<CommitCherryPickViewModel> _cherryPick;
+    private DateTimeOffset _committerTime;
     private string _id;
     private string _message;
-    private object _pR;
-    private IReadOnlyList<object> _relatedItems;
+    private CommitPRViewModel _pr;
+    private IReadOnlyList<CommitRelatedItemViewModel> _relatedItems;
     private string _shortMessage;
-    private DateTimeOffset _time;
 
     public CommitViewModel()
     {
-        RelatedItems = new ObservableCollection<object>();
+        RelatedItems = new ObservableCollection<CommitRelatedItemViewModel>();
     }
 
     public string Author
@@ -28,16 +29,16 @@ public class CommitViewModel : BaseNotifyPropertyChanged
         set { SetField(ref _author, value); }
     }
 
-    public string CherryPickSource
+    public DateTimeOffset AuthorTime
     {
-        get { return _cherryPickSource; }
-        set { SetField(ref _cherryPickSource, value); }
+        get { return _authorTime; }
+        set { SetField(ref _authorTime, value); }
     }
 
-    public string CherryPickTarget
+    public DateTimeOffset CommitterTime
     {
-        get { return _cherryPickTarget; }
-        set { SetField(ref _cherryPickTarget, value); }
+        get { return _committerTime; }
+        set { SetField(ref _committerTime, value); }
     }
 
     public string Id
@@ -46,19 +47,21 @@ public class CommitViewModel : BaseNotifyPropertyChanged
         set { SetField(ref _id, value); }
     }
 
+    public bool IsCherryPickPart { get; private set; }
+
     public string Message
     {
         get { return _message; }
         set { SetField(ref _message, value); }
     }
 
-    public object PR
+    public CommitPRViewModel PR
     {
-        get { return _pR; }
-        set { SetField(ref _pR, value); }
+        get { return _pr; }
+        set { SetField(ref _pr, value); }
     }
 
-    public IReadOnlyList<object> RelatedItems
+    public IReadOnlyList<CommitRelatedItemViewModel> RelatedItems
     {
         get { return _relatedItems; }
         set { SetField(ref _relatedItems, value); }
@@ -70,9 +73,9 @@ public class CommitViewModel : BaseNotifyPropertyChanged
         set { SetField(ref _shortMessage, value); }
     }
 
-    public DateTimeOffset Time
+    public void AddCherryPickReference(CommitCherryPickViewModel cherryPickViewModel)
     {
-        get { return _time; }
-        set { SetField(ref _time, value); }
+        IsCherryPickPart = true;
+        _cherryPick = new WeakReference<CommitCherryPickViewModel>(cherryPickViewModel);
     }
 }

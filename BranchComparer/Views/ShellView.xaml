@@ -9,141 +9,90 @@
         xmlns:ps="http://schemas.ps.com/2019/xaml"
         xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
         xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
+        xmlns:views="clr-namespace:BranchComparer.Views"
         Background="{theme:Brush Accent}"
         d:DataContext="{d:DesignInstance viewModels:ShellViewModel}"
         Focusable="False"
         mc:Ignorable="d">
+
     <ps:BusyContainer Margin="5"
                       Behavior="Manual"
                       IsBusy="{Binding BusyService.IsBusy}"
                       State="{Binding BusyService}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-
-            <ItemsControl Grid.Row="0"
-                          ItemTemplateSelector="{mvvm:TemplateResolver}"
-                          ps:HeaderedContent.HeaderColumnWidth="150"
-                          ps:HeaderedContent.IsResizable="False"
-                          Focusable="False"
-                          ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.SETTINGS}}" />
-
-            <ContentControl Grid.Row="1"
-                            ContentTemplateSelector="{mvvm:TemplateResolver}"
-                            Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.FILTER}}"
-                            Focusable="False" />
-
-            <Grid Grid.Row="2" Margin="5">
+        <AdornerDecorator>
+            <Grid >
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="50" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
 
-                <ps:HeaderedContent Grid.Row="0"
-                                    Grid.Column="0"
-                                    Orientation="Vertical">
-                    <ps:HeaderedContent.Header>
-                        <TextBlock Text="Left branch" />
-                    </ps:HeaderedContent.Header>
-                    <ps:AutoCompleteBox AllowFreeItem="True"
-                                        ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
-                                        SelectedItem="{Binding BranchSettings.Left}" />
-                </ps:HeaderedContent>
+                <ItemsControl Grid.Row="0"
+                              ItemTemplateSelector="{mvvm:TemplateResolver}"
+                              ps:HeaderedContent.HeaderColumnWidth="150"
+                              ps:HeaderedContent.IsResizable="False"
+                              Focusable="False"
+                              ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.SETTINGS}}" />
 
-                <ps:HeaderedContent Grid.Row="0"
-                                    Grid.Column="2"
-                                    Orientation="Vertical">
-                    <ps:HeaderedContent.Header>
-                        <TextBlock Text="Right branch" />
-                    </ps:HeaderedContent.Header>
-                    <ps:AutoCompleteBox AllowFreeItem="True"
-                                        ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
-                                        SelectedItem="{Binding BranchSettings.Right}" />
-                </ps:HeaderedContent>
+                <ContentControl Grid.Row="1"
+                                ContentTemplateSelector="{mvvm:TemplateResolver}"
+                                Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.FILTER}}"
+                                Focusable="False" />
 
-                <commitsView:CommitsView Grid.Row="1"
-                                         Grid.Column="0"
-                                         Focusable="False"
-                                         ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH}}"
-                                         LayoutFlowDirection="LeftToRight">
-                    <commitsView:CommitsView.ItemTemplate>
-                        <DataTemplate DataType="viewModels:CommitViewModel">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="70" />
-                                    <ColumnDefinition Width="140" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-
-                                <ContentControl Grid.Column="0"
-                                                VerticalAlignment="Top"
-                                                ContentTemplateSelector="{mvvm:TemplateResolver}"
-                                                Content="{Binding PR}" />
-
-                                <ItemsControl Grid.Column="1"
-                                              ItemTemplateSelector="{mvvm:TemplateResolver}"
-                                              ItemsSource="{Binding RelatedItems}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-
-                                <ContentControl Grid.Column="2"
-                                                VerticalAlignment="Top"
-                                                ContentTemplateSelector="{mvvm:TemplateResolver}"
-                                                Content="{Binding}" />
-                            </Grid>
-                        </DataTemplate>
-                    </commitsView:CommitsView.ItemTemplate>
-                </commitsView:CommitsView>
-
-                <commitsView:CommitsView Grid.Row="1"
-                                         Grid.Column="2"
-                                         Focusable="False"
-                                         ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH}}">
-                    <commitsView:CommitsView.ItemTemplate>
-                        <DataTemplate DataType="viewModels:CommitViewModel">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="70" />
-                                    <ColumnDefinition Width="140" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-
-                                <ContentControl Grid.Column="2"
-                                                VerticalAlignment="Top"
-                                                ContentTemplateSelector="{mvvm:TemplateResolver}"
-                                                Content="{Binding}" />
-
-                                <ItemsControl Grid.Column="1"
-                                              ItemTemplateSelector="{mvvm:TemplateResolver}"
-                                              ItemsSource="{Binding RelatedItems}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-
-                                <ContentControl Grid.Column="0"
-                                                VerticalAlignment="Top"
-                                                ContentTemplateSelector="{mvvm:TemplateResolver}"
-                                                Content="{Binding PR}" />
-                            </Grid>
-                        </DataTemplate>
-                    </commitsView:CommitsView.ItemTemplate>
-                </commitsView:CommitsView>
+                <Grid Grid.Row="2" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <ps:HeaderedContent Grid.Row="0"
+                                        Grid.Column="0"
+                                        Orientation="Vertical">
+                        <ps:HeaderedContent.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Branch " />
+                                <TextBlock Text="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH_COUNT}}" />
+                            </StackPanel>
+                        </ps:HeaderedContent.Header>
+                        <ps:AutoCompleteBox AllowFreeItem="True"
+                                            ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
+                                            SelectedItem="{Binding BranchSettings.Left}" />
+                    </ps:HeaderedContent>
+                    <ps:HeaderedContent Grid.Row="0"
+                                        Grid.Column="2"
+                                        Orientation="Vertical">
+                        <ps:HeaderedContent.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Branch " />
+                                <TextBlock Text="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH_COUNT}}" />
+                            </StackPanel>
+                        </ps:HeaderedContent.Header>
+                        <ps:AutoCompleteBox AllowFreeItem="True"
+                                            ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.AVAILABLE_BRANCHES}}"
+                                            SelectedItem="{Binding BranchSettings.Right}" />
+                    </ps:HeaderedContent>
+                </Grid>
+                <Grid Grid.Row="3"
+                      Margin="5"
+                      mvvm:Container.Adapter="{Binding RelativeSource={RelativeSource AncestorType=views:ShellView}, Path=CherryPickAdapter}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <commitsView:CommitsView Grid.Column="0"
+                                             ItemTemplateSelector="{mvvm:TemplateResolver}"
+                                             Focusable="False"
+                                             ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.LEFT_BRANCH}}"
+                                             LayoutFlowDirection="LeftToRight" />
+                    <commitsView:CommitsView Grid.Column="2"
+                                             ItemTemplateSelector="{mvvm:TemplateResolver}"
+                                             Focusable="False"
+                                             ItemsSource="{mvvm:CollectionModelResolver Region={x:Static infrastructure:Regions.RIGHT_BRANCH}}"
+                                             LayoutFlowDirection="RightToLeft" />
+                </Grid>
             </Grid>
-        </Grid>
+        </AdornerDecorator>
     </ps:BusyContainer>
 </Border>

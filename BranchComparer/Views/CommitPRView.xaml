@@ -1,6 +1,7 @@
 ﻿<tilesContentControl:TilesContentControl x:Class="BranchComparer.Views.CommitPRView"
                                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                         xmlns:controls="clr-namespace:BranchComparer.Controls"
                                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                                          xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
@@ -9,12 +10,23 @@
                                          d:DataContext="{d:DesignInstance viewModels:CommitPRViewModel}"
                                          Focusable="False"
                                          mc:Ignorable="d">
-    <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
+    <tilesContentControl:TilesContentControl.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition />
+    </tilesContentControl:TilesContentControl.ColumnDefinitions>
+
+    <tilesContentControl:TilesContentControlItem Background="Orange">
         <TextBlock HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    Foreground="{theme:Brush Main}"
                    FontSize="{theme:FontSize S}"
-                   Text="{Binding Id}"
-                   TextTrimming="CharacterEllipsis" />
+                   Text="PR" />
+    </tilesContentControl:TilesContentControlItem>
+    <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
+        <controls:LinkButton HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Foreground="{theme:Brush Main}"
+                             Text="{Binding Id}"
+                             FontSize="{theme:FontSize S}" />
     </tilesContentControl:TilesContentControlItem>
 </tilesContentControl:TilesContentControl>

@@ -25,7 +25,12 @@ internal class FilterService : IFilterService
         if (settings.Period.HasValue)
         {
             var untilTime = DateTime.Now - settings.Period.Value;
-            commits = commits.Where(c => c.Time >= untilTime);
+            commits = commits.Where(c => c.AuthorTime >= untilTime);
+        }
+
+        if (!string.IsNullOrEmpty(settings.Message))
+        {
+            commits = commits.Where(c => c.Message.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         return commits.ToList();

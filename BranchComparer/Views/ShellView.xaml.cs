@@ -1,4 +1,5 @@
-﻿using BranchComparer.ViewModels;
+﻿using BranchComparer.Components.CherryPick;
+using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
 
@@ -8,10 +9,13 @@ namespace BranchComparer.Views;
 [DependencyRegisterAsInterface(typeof(IView<ShellViewModel>))]
 public partial class ShellView : IView<ShellViewModel>
 {
-    public ShellView()
+    public ShellView(CherryPickAdapter cherryPickAdapter)
     {
+        CherryPickAdapter = cherryPickAdapter;
         InitializeComponent();
     }
+
+    public CherryPickAdapter CherryPickAdapter { get; }
 
     public ShellViewModel ViewModel
     {
