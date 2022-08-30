@@ -5,11 +5,15 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using BranchComparer.Infrastructure;
+using BranchComparer.Infrastructure.Events;
+using BranchComparer.Infrastructure.Services;
+using BranchComparer.Settings;
 using BranchComparer.ViewModels;
 using BranchComparer.Views;
 using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
+using PS.MVVM.Services.Extensions;
 
 namespace BranchComparer.Components.CherryPick;
 
@@ -19,18 +23,32 @@ public class CherryPicksAdorner : Adorner
     public static readonly Brush CherryPickBrush = new SolidColorBrush(Color.FromArgb(100, 230, 0, 0));
 
     private readonly IModelResolverService _modelResolverService;
+    private readonly ISettingsService _settingsService;
 
     private readonly List<WeakReference> _views;
 
-    public CherryPicksAdorner(UIElement adornedElement, IModelResolverService modelResolverService)
+    public CherryPicksAdorner(
+        UIElement adornedElement,
+        IModelResolverService modelResolverService,
+        ISettingsService settingsService,
+        IBroadcastService broadcastService)
         : base(adornedElement)
     {
         _modelResolverService = modelResolverService;
+        _settingsService = settingsService;
         _views = new List<WeakReference>();
+
+        broadcastService.Subscribe<SettingsChangedArgs<VisualizationSettings>>(OnVisualizationSettingsChanged);
     }
 
     protected override void OnRender(DrawingContext drawingContext)
     {
+        var settings = _settingsService.GetSettings<VisualizationSettings>();
+        if (!settings.IsCherryPickVisible)
+        {
+            return;
+        }
+
         var adornedElement = (FrameworkElement)AdornedElement;
         var activeViews = _views
                           .Select(v => v.Target as CommitView)
@@ -60,8 +78,8 @@ public class CherryPicksAdorner : Adorner
             var leftView = sourceViewAnchorPoint.X < targetViewAnchorPoint.X ? resolvedSourceView : resolvedTargetView;
             var rightView = sourceViewAnchorPoint.X < targetViewAnchorPoint.X ? resolvedTargetView : resolvedSourceView;
 
-            var sourcePoint = leftView.TranslatePoint(new Point(leftView.ActualWidth, leftView.ActualHeight / 2), adornedElement);
-            var targetPoint = rightView.TranslatePoint(new Point(0, leftView.ActualHeight / 2), adornedElement);
+            var sourcePoint = Point.Add(leftView.TranslatePoint(new Point(leftView.ActualWidth, leftView.ActualHeight / 2), adornedElement), new Vector(-1, 0));
+            var targetPoint = Point.Add(rightView.TranslatePoint(new Point(0, leftView.ActualHeight / 2), adornedElement), new Vector(1, 0));
 
             if (sourcePoint.Y < 0 || targetPoint.Y < 0 || sourcePoint.Y > adornedElement.ActualHeight || targetPoint.Y > adornedElement.ActualHeight)
             {
@@ -86,6 +104,11 @@ public class CherryPicksAdorner : Adorner
         view.Unloaded += OnUnloaded;
         _views.Add(weakReference);
 
+        InvalidateVisual();
+    }
+
+    private void OnVisualizationSettingsChanged(SettingsChangedArgs<VisualizationSettings> obj)
+    {
         InvalidateVisual();
     }
 }

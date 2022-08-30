@@ -178,16 +178,20 @@ internal class WorkingBranchesProvider : IDisposable
 
     private IReadOnlyList<CommitViewModel> TransformCommits(IEnumerable<Commit> commits)
     {
-        return commits.Select(c => new CommitViewModel
+        return commits.Select(c =>
         {
-            Id = c.Id,
-            Author = c.Author,
-            Message = c.Message,
-            ShortMessage = c.MessageShort,
-            AuthorTime = c.AuthorTime,
-            CommitterTime = c.CommitterTime,
-            PR = c.MergedPR.HasValue ? _scope.Resolve<CommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null,
-            RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList(),
+            var commitViewModel = _scope.Resolve<CommitViewModel>();
+
+            commitViewModel.Author = c.Author;
+            commitViewModel.Message = c.Message;
+            commitViewModel.ShortMessage = c.MessageShort;
+            commitViewModel.AuthorTime = c.AuthorTime;
+            commitViewModel.CommitterTime = c.CommitterTime;
+            commitViewModel.PR = c.MergedPR.HasValue ? _scope.Resolve<CommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null;
+            commitViewModel.RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList();
+            commitViewModel.Id = c.Id;
+
+            return commitViewModel;
         }).ToList();
     }
 }

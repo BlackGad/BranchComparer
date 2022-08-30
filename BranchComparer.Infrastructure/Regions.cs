@@ -10,4 +10,5 @@ public static class Regions
     public const string RIGHT_BRANCH = nameof(RIGHT_BRANCH);
     public const string RIGHT_BRANCH_COUNT = nameof(RIGHT_BRANCH_COUNT);
     public const string SETTINGS = nameof(SETTINGS);
+    public const string VISUALIZATION = nameof(VISUALIZATION);
 }

@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using BranchComparer.Infrastructure.Services;
+using BranchComparer.Settings;
 using PS;
+using PS.IoC.Attributes;
 
 namespace BranchComparer.ViewModels;
 
+[DependencyRegisterAsSelf]
 public class CommitViewModel : BaseNotifyPropertyChanged
 {
     private string _author;
@@ -18,9 +22,11 @@ public class CommitViewModel : BaseNotifyPropertyChanged
     private IReadOnlyList<CommitRelatedItemViewModel> _relatedItems;
     private string _shortMessage;
 
-    public CommitViewModel()
+    public CommitViewModel(ISettingsService settingsService)
     {
         RelatedItems = new ObservableCollection<CommitRelatedItemViewModel>();
+
+        VisualizationSettings = settingsService.GetObservableSettings<VisualizationSettings>();
     }
 
     public string Author
@@ -72,6 +78,8 @@ public class CommitViewModel : BaseNotifyPropertyChanged
         get { return _shortMessage; }
         set { SetField(ref _shortMessage, value); }
     }
+
+    public VisualizationSettings VisualizationSettings { get; }
 
     public void AddCherryPickReference(CommitCherryPickViewModel cherryPickViewModel)
     {

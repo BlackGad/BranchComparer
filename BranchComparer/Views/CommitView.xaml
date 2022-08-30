@@ -1,38 +1,61 @@
-﻿<Border x:Class="BranchComparer.Views.CommitView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
-        xmlns:ps="http://schemas.ps.com/2019/xaml"
-        xmlns:psResources="clr-namespace:PS.WPF.Resources;assembly=PS.WPF"
-        xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
-        xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
-        xmlns:tilesContentControl="clr-namespace:BranchComparer.Controls.TilesContentControl"
-        xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
-        BorderThickness="1"
-        d:DataContext="{d:DesignInstance viewModels:CommitViewModel}"
-        CornerRadius="5"
-        Focusable="False"
-        mc:Ignorable="d">
-    <Border.Resources>
+﻿<Grid x:Class="BranchComparer.Views.CommitView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:cherryPick="clr-namespace:BranchComparer.Components.CherryPick"
+      xmlns:commitsView="clr-namespace:BranchComparer.Controls.CommitsView"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:m="http://schemas.ps.com/2019/xaml/markup"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
+      xmlns:ps="http://schemas.ps.com/2019/xaml"
+      xmlns:psResources="clr-namespace:PS.WPF.Resources;assembly=PS.WPF"
+      xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
+      xmlns:switch="http://schemas.ps.com/2019/xaml/switchvalueconverter"
+      xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+      xmlns:tilesContentControl="clr-namespace:BranchComparer.Controls.TilesContentControl"
+      xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
+      d:DataContext="{d:DesignInstance viewModels:CommitViewModel}"
+      Focusable="False"
+      mc:Ignorable="d">
+    <Grid.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <psResources:SharedResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <ps:SwitchValueConverter x:Key="CherryPickButtonGridColumnConverter">
+                <switch:EqualTo Result="0">
+                    <switch:EqualTo.Value>
+                        <FlowDirection>RightToLeft</FlowDirection>
+                    </switch:EqualTo.Value>
+                </switch:EqualTo>
+                <switch:EqualTo Result="4">
+                    <switch:EqualTo.Value>
+                        <FlowDirection>LeftToRight</FlowDirection>
+                    </switch:EqualTo.Value>
+                </switch:EqualTo>
+            </ps:SwitchValueConverter>
+
+            <ps:SwitchValueConverter x:Key="CherryPickBrushConverter">
+                <switch:EqualTo Result="{x:Static cherryPick:CherryPicksAdorner.CherryPickBrush}" Value="{m:Boolean True}" />
+                <switch:EqualTo Result="Transparent" Value="{m:Boolean False}" />
+            </ps:SwitchValueConverter>
+
         </ResourceDictionary>
-    </Border.Resources>
+    </Grid.Resources>
+    <Border Background="{Binding IsCherryPickPart, Converter={StaticResource CherryPickBrushConverter}}"
+            CornerRadius="5"
+            Visibility="{Binding VisualizationSettings.IsCherryPickVisible, Converter={x:Static ps:BooleanConverters.ToVisibility}}" />
     <Grid Margin="3">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="70" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="150" />
             <ColumnDefinition />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <ps:IconicButton x:Name="LeftCherryPickButton"
-                         Grid.Column="0"
+        <ps:IconicButton Grid.Column="{Binding RelativeSource={RelativeSource AncestorType=commitsView:CommitsView}, Path=LayoutFlowDirection, Converter={StaticResource CherryPickButtonGridColumnConverter}}"
                          Width="15"
                          HorizontalAlignment="Center"
                          VerticalAlignment="Center"
@@ -42,9 +65,11 @@
                          Stretch="Uniform" />
 
         <ContentControl Grid.Column="1"
+                        Width="70"
                         VerticalAlignment="Top"
                         ContentTemplateSelector="{mvvm:TemplateResolver}"
-                        Content="{Binding PR}" />
+                        Content="{Binding PR}"
+                        Visibility="{Binding VisualizationSettings.IsPRVisible, Converter={x:Static ps:BooleanConverters.ToVisibility}}" />
 
         <ItemsControl Grid.Column="2"
                       ItemTemplateSelector="{mvvm:TemplateResolver}"
@@ -79,17 +104,6 @@
                 </TextBlock>
             </tilesContentControl:TilesContentControlItem>
         </tilesContentControl:TilesContentControl>
-
-        <Border x:Name="RightCherryPickButton"
-                Grid.Column="4"
-                Width="15">
-            <ps:IconicButton HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             Background="{theme:Brush Main}"
-                             Geometry="{StaticResource {x:Static resources:Icons.CherryGeometry}}"
-                             IconWidth="12"
-                             Stretch="Uniform" />
-        </Border>
     </Grid>
-</Border>
+</Grid>
 

@@ -20,8 +20,9 @@
                       IsBusy="{Binding BusyService.IsBusy}"
                       State="{Binding BusyService}">
         <AdornerDecorator>
-            <Grid >
+            <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -37,13 +38,18 @@
 
                 <ContentControl Grid.Row="1"
                                 ContentTemplateSelector="{mvvm:TemplateResolver}"
+                                Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.VISUALIZATION}}"
+                                Focusable="False" />
+
+                <ContentControl Grid.Row="2"
+                                ContentTemplateSelector="{mvvm:TemplateResolver}"
                                 Content="{mvvm:ObjectModelResolver Region={x:Static infrastructure:Regions.FILTER}}"
                                 Focusable="False" />
 
-                <Grid Grid.Row="2" Margin="5">
+                <Grid Grid.Row="3" Margin="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
-                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <ps:HeaderedContent Grid.Row="0"
@@ -73,12 +79,12 @@
                                             SelectedItem="{Binding BranchSettings.Right}" />
                     </ps:HeaderedContent>
                 </Grid>
-                <Grid Grid.Row="3"
+                <Grid Grid.Row="4"
                       Margin="5"
                       mvvm:Container.Adapter="{Binding RelativeSource={RelativeSource AncestorType=views:ShellView}, Path=CherryPickAdapter}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
-                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <commitsView:CommitsView Grid.Column="0"
