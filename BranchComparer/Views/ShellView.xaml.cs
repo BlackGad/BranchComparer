@@ -13,6 +13,12 @@ public partial class ShellView : IView<ShellViewModel>
     {
         CherryPickAdapter = cherryPickAdapter;
         InitializeComponent();
+
+        Loaded += (_, _) =>
+        {
+            CherryPickAdapter.RaiseRegisterEvent(LeftCommits);
+            CherryPickAdapter.RaiseRegisterEvent(RightCommits);
+        };
     }
 
     public CherryPickAdapter CherryPickAdapter { get; }

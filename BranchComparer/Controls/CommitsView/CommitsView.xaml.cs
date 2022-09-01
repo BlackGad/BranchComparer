@@ -71,6 +71,19 @@ public class CommitsView : ListBox
         return item is CommitsViewItem;
     }
 
+    public void BringIntoViewPublic(object item)
+    {
+        if (!ItemContainerGenerator.Items.Contains(item))
+        {
+            return;
+        }
+
+        if (GetTemplateChild("PART_Panel") is VirtualizingStackPanel panel)
+        {
+            panel.BringIndexIntoViewPublic(ItemContainerGenerator.Items.IndexOf(item));
+        }
+    }
+
     #region Nested type: Resource
 
     public static class Resource

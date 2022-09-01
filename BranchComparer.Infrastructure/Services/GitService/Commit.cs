@@ -28,21 +28,17 @@ public record Commit
                             .Distinct()
                             .ToList();
 
+        MergedPRs = Regex.Matches(message, @"(Merged PR ([0-9]+):\s*)")
+                         .Where(m => m.Success)
+                         .Select(m => int.TryParse(m.Groups[2].Value, out var parsed) ? parsed : int.MaxValue)
+                         .Where(v => v != int.MaxValue)
+                         .Distinct()
+                         .ToList();
+
         var extraCommitMatch = Regex.Match(message, @"^(Commit ([0-9a-fA-F]+):\s*)");
         if (extraCommitMatch.Success)
         {
             var value = extraCommitMatch.Groups[1].Value;
-            message = message.Replace(value, string.Empty);
-            MessageShort = MessageShort.Replace(value, string.Empty);
-        }
-
-        var mergedPRMatch = Regex.Match(message, @"^(Merged PR ([0-9]+):\s*)");
-        if (mergedPRMatch.Success && int.TryParse(mergedPRMatch.Groups[2].Value, out var parsedMergedPR))
-        {
-            MergedPR = parsedMergedPR;
-            
-            var value = mergedPRMatch.Groups[1].Value;
-            message = MessageShort.Replace(value, string.Empty);
             MessageShort = MessageShort.Replace(value, string.Empty);
         }
     }
@@ -57,7 +53,7 @@ public record Commit
 
     public string Id { get; }
 
-    public int? MergedPR { get; }
+    public IReadOnlyList<int> MergedPRs { get; }
 
     public string Message { get; }
 

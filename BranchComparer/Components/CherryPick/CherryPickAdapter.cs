@@ -1,8 +1,14 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using Autofac;
+using BranchComparer.Controls.CommitsView;
+using BranchComparer.ViewModels;
 using BranchComparer.Views;
+using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Components;
 
@@ -11,19 +17,32 @@ namespace BranchComparer.Components.CherryPick;
 [DependencyRegisterAsSelf]
 public class CherryPickAdapter : Adapter<FrameworkElement>
 {
+    public static readonly RoutedEvent BringCherryPickToViewEvent = EventManager.RegisterRoutedEvent(
+        "BringCherryPickToView",
+        RoutingStrategy.Bubble,
+        typeof(CherryPickEventHandler),
+        typeof(CherryPickAdapter));
+
     public static readonly RoutedEvent RegisterEvent = EventManager.RegisterRoutedEvent(
         "Register",
         RoutingStrategy.Bubble,
-        typeof(CherryPickRegisterEvent),
+        typeof(CherryPickRegisterEventHandler),
         typeof(CherryPickAdapter));
 
-    public static void RaiseRegisterEvent(CommitView element)
+    public static void RaiseBringCherryPickToViewEvent(UIElement source, CommitCherryPickViewModel cherryPickViewModel)
+    {
+        source.RaiseEvent(new CherryPickEventArgs(BringCherryPickToViewEvent, source, cherryPickViewModel));
+    }
+
+    public static void RaiseRegisterEvent(UIElement element)
     {
         element.RaiseEvent(new CherryPickRegisterEventArgs(RegisterEvent, element));
     }
 
     private readonly ILifetimeScope _scope;
     private CherryPicksAdorner _adorner;
+
+    private List<WeakReference> _commitsViews;
 
     public CherryPickAdapter(ILifetimeScope scope)
     {
@@ -36,7 +55,8 @@ public class CherryPickAdapter : Adapter<FrameworkElement>
 
     protected override void OnAttach(FrameworkElement container)
     {
-        container.AddHandler(RegisterEvent, new CherryPickRegisterEvent(OnCherryPickRegister));
+        container.AddHandler(RegisterEvent, new CherryPickRegisterEventHandler(OnCherryPickRegister));
+        container.AddHandler(BringCherryPickToViewEvent, new CherryPickEventHandler(OnBringCherryPickToView));
         container.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChangedEvent));
 
         if (AdornerLayer.GetAdornerLayer(container) is AdornerLayer adornerLayer)
@@ -44,22 +64,47 @@ public class CherryPickAdapter : Adapter<FrameworkElement>
             _adorner = _scope.Resolve<CherryPicksAdorner>(TypedParameter.From<UIElement>(container));
             adornerLayer.Add(_adorner);
         }
+
+        _commitsViews = new List<WeakReference>();
     }
 
     protected override void OnDetach(FrameworkElement container)
     {
-        container.RemoveHandler(RegisterEvent, new CherryPickRegisterEvent(OnCherryPickRegister));
+        container.RemoveHandler(RegisterEvent, new CherryPickRegisterEventHandler(OnCherryPickRegister));
         container.RemoveHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChangedEvent));
+        container.RemoveHandler(BringCherryPickToViewEvent, new CherryPickEventHandler(OnBringCherryPickToView));
 
         if (AdornerLayer.GetAdornerLayer(container) is AdornerLayer adornerLayer)
         {
             adornerLayer.Remove(_adorner);
         }
+
+        _commitsViews.Clear();
+    }
+
+    private void OnBringCherryPickToView(object sender, CherryPickEventArgs e)
+    {
+        foreach (var view in _commitsViews.Select(c => c.Target).Enumerate<CommitsView>())
+        {
+            view.BringIntoViewPublic(e.CherryPickViewModel.Source);
+            view.BringIntoViewPublic(e.CherryPickViewModel.Target);
+        }
     }
 
     private void OnCherryPickRegister(object sender, CherryPickRegisterEventArgs e)
     {
-        _adorner?.AddLoadedView(e.OriginalSource as CommitView);
+        if (e.OriginalSource is CommitView commitView)
+        {
+            _adorner?.AddLoadedView(commitView);
+        }
+
+        if (e.OriginalSource is CommitsView commitsView)
+        {
+            if (!_commitsViews.Select(c => c.Target).Contains(commitsView))
+            {
+                _commitsViews.Add(new WeakReference(commitsView));
+            }
+        }
     }
 
     private void OnScrollChangedEvent(object sender, ScrollChangedEventArgs e)

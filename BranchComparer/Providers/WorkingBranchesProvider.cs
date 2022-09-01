@@ -101,35 +101,10 @@ internal class WorkingBranchesProvider : IDisposable
             var leftEnvironmentCommits = TransformCommits(leftCommits);
             var rightEnvironmentCommits = TransformCommits(rightCommits);
 
-            cherryPicks = leftEnvironmentCommits.Compare(rightEnvironmentCommits, commit => HashCode.Combine(commit.ShortMessage))
-                                                .PresentInBoth
-                                                .Where(tuple => tuple.Item1.Id != tuple.Item2.Id)
-                                                .Select(tuple =>
-                                                {
-                                                    var first = tuple.Item1;
-                                                    var second = tuple.Item2;
+            cherryPicks = DetectCherryPicks(leftEnvironmentCommits, rightEnvironmentCommits).ToList();
 
-                                                    var viewModel = _scope.Resolve<CommitCherryPickViewModel>();
-                                                    if (first.CommitterTime > second.CommitterTime)
-                                                    {
-                                                        viewModel.Source = second;
-                                                        viewModel.Target = first;
-                                                    }
-                                                    else
-                                                    {
-                                                        viewModel.Source = first;
-                                                        viewModel.Target = second;
-                                                    }
-
-                                                    first.AddCherryPickReference(viewModel);
-                                                    second.AddCherryPickReference(viewModel);
-
-                                                    return viewModel;
-                                                })
-                                                .ToList();
-
-            leftBranch = _filterService.FilterCommits(leftEnvironmentCommits);
-            rightBranch = _filterService.FilterCommits(rightEnvironmentCommits);
+            leftBranch = _filterService.FilterCommits(leftEnvironmentCommits, cherryPicks);
+            rightBranch = _filterService.FilterCommits(rightEnvironmentCommits, cherryPicks);
         }
         catch
         {
@@ -161,6 +136,41 @@ internal class WorkingBranchesProvider : IDisposable
         });
     }
 
+    private IEnumerable<CommitCherryPickViewModel> DetectCherryPicks(IReadOnlyList<CommitViewModel> leftEnvironmentCommits, IReadOnlyList<CommitViewModel> rightEnvironmentCommits)
+    {
+        int Hasher(CommitViewModel commit)
+        {
+            return HashCode.Combine(commit.ShortMessage);
+        }
+
+        return leftEnvironmentCommits
+               .Compare(rightEnvironmentCommits, Hasher)
+               .PresentInBoth
+               .Where(tuple => tuple.Item1.Id != tuple.Item2.Id)
+               .Select(tuple =>
+               {
+                   var first = tuple.Item1;
+                   var second = tuple.Item2;
+
+                   var viewModel = _scope.Resolve<CommitCherryPickViewModel>();
+                   if (first.CommitterTime > second.CommitterTime)
+                   {
+                       viewModel.Source = second;
+                       viewModel.Target = first;
+                   }
+                   else
+                   {
+                       viewModel.Source = first;
+                       viewModel.Target = second;
+                   }
+
+                   first.AddCherryPickReference(viewModel);
+                   second.AddCherryPickReference(viewModel);
+
+                   return viewModel;
+               });
+    }
+
     private void GitServiceStateChanged(ServiceStateChangedArgs<IGitService> args)
     {
         _updateModelsTrigger.Trigger();
@@ -187,7 +197,7 @@ internal class WorkingBranchesProvider : IDisposable
             commitViewModel.ShortMessage = c.MessageShort;
             commitViewModel.AuthorTime = c.AuthorTime;
             commitViewModel.CommitterTime = c.CommitterTime;
-            commitViewModel.PR = c.MergedPR.HasValue ? _scope.Resolve<CommitPRViewModel>(TypedParameter.From(c.MergedPR.Value)) : null;
+            commitViewModel.PRs = c.MergedPRs.Select(i => _scope.Resolve<CommitPRViewModel>(TypedParameter.From(i))).ToList();
             commitViewModel.RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList();
             commitViewModel.Id = c.Id;
 

@@ -19,9 +19,14 @@ internal class FilterService : IFilterService
         _settingsService = settingsService;
     }
 
-    public IReadOnlyList<CommitViewModel> FilterCommits(IEnumerable<CommitViewModel> commits)
+    public IReadOnlyList<CommitViewModel> FilterCommits(IEnumerable<CommitViewModel> commits, IReadOnlyList<CommitCherryPickViewModel> cherryPicks)
     {
         var settings = _settingsService.GetSettings<FilterSettings>();
+        if (settings.ExcludeCherryPicks)
+        {
+            commits = commits.Where(c => cherryPicks.All(p => p.Source != c && p.Target != c));
+        }
+
         if (settings.Period.HasValue)
         {
             var untilTime = DateTime.Now - settings.Period.Value;

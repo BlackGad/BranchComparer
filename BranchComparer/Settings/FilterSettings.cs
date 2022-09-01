@@ -6,6 +6,7 @@ namespace BranchComparer.Settings;
 
 public class FilterSettings : AbstractSettings
 {
+    private bool _excludeCherryPicks;
     private string _message;
     private TimeSpan? _period;
     private string _release;
@@ -14,6 +15,13 @@ public class FilterSettings : AbstractSettings
     public FilterSettings()
     {
         _showUniqueCommits = true;
+    }
+
+    [JsonProperty]
+    public bool ExcludeCherryPicks
+    {
+        get { return _excludeCherryPicks; }
+        set { SetField(ref _excludeCherryPicks, value); }
     }
 
     [JsonProperty]

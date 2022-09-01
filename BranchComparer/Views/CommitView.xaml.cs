@@ -3,6 +3,7 @@ using BranchComparer.Components.CherryPick;
 using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
+using PS.WPF.Patterns.Command;
 
 namespace BranchComparer.Views;
 
@@ -15,7 +16,10 @@ public partial class CommitView : IView<CommitViewModel>
         InitializeComponent();
 
         Loaded += OnLoaded;
+        BringCherryPickToViewCommand = new RelayUICommand(BringCherryPickToView);
     }
+
+    public IUICommand BringCherryPickToViewCommand { get; }
 
     public CommitViewModel ViewModel
     {
@@ -25,5 +29,13 @@ public partial class CommitView : IView<CommitViewModel>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         CherryPickAdapter.RaiseRegisterEvent(this);
+    }
+
+    private void BringCherryPickToView()
+    {
+        if (ViewModel.IsCherryPickPart)
+        {
+            CherryPickAdapter.RaiseBringCherryPickToViewEvent(this, ViewModel.CherryPickViewModel);
+        }
     }
 }
