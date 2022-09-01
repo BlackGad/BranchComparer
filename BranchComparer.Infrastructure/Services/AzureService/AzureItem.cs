@@ -14,4 +14,6 @@ public class AzureItem
     public string Title { get; set; }
 
     public AzureItemType Type { get; set; }
+
+    public Uri Uri { get; set; }
 }

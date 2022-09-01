@@ -106,6 +106,26 @@ public class GitService : BaseNotifyPropertyChanged,
                    .ToList();
     }
 
+    public Uri GetPRItemUri(int id)
+    {
+        var settings = GetSettings();
+        using var repo = new Repository(settings.RepositoryDirectory);
+
+        var remote = repo.Network.Remotes.FirstOrDefault();
+        if (string.IsNullOrEmpty(remote?.Url))
+        {
+            throw new InvalidOperationException("Repository is not connected to remote");
+        }
+
+        var builder = new UriBuilder(remote.Url)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+        };
+        builder.Path += "/pullrequest/" + id;
+        return builder.Uri;
+    }
+
     public void InvalidateSettings()
     {
         ApplySettings(_settings);

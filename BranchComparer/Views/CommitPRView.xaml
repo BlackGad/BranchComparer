@@ -26,7 +26,8 @@
         <controls:LinkButton HorizontalAlignment="Center"
                              VerticalAlignment="Center"
                              Foreground="{theme:Brush Main}"
-                             Text="{Binding Id}"
-                             FontSize="{theme:FontSize S}" />
+                             Command="{Binding NavigateCommand}"
+                             FontSize="{theme:FontSize S}"
+                             Text="{Binding Id}" />
     </tilesContentControl:TilesContentControlItem>
 </tilesContentControl:TilesContentControl>

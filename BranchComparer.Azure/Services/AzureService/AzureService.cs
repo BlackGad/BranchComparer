@@ -9,6 +9,7 @@ using FluentValidation;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
+using Microsoft.VisualStudio.Services.WebApi;
 using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
@@ -28,6 +29,8 @@ public class AzureService : BaseNotifyPropertyChanged,
                             IAzureService,
                             IDisposable
 {
+    private const string HTTPS_DEV_AZURE_COM = "https://dev.azure.com/";
+
     private static object TryGetField(IDictionary<string, object> fields, string key)
     {
         if (fields.TryGetValue(key, out var value))
@@ -37,7 +40,17 @@ public class AzureService : BaseNotifyPropertyChanged,
 
         return null;
     }
+    
+    private static Uri TryGetLink(IReadOnlyDictionary<string, object> links, string key)
+    {
+        if (links.TryGetValue(key, out var value) && value is ReferenceLink link)
+        {
+            return new Uri(link.Href);
+        }
 
+        return null;
+    }
+    
     private readonly ThrottlingTrigger _applySettingsTrigger;
     private readonly IBroadcastService _broadcastService;
     private readonly ThrottlingTrigger _itemsResolveRequiredTrigger;
@@ -147,11 +160,6 @@ public class AzureService : BaseNotifyPropertyChanged,
 
     private void OnItemsResolveRequiredTrigger(object sender, EventArgs e)
     {
-        if (State.IsValid != true)
-        {
-            return;
-        }
-
         var notResolvedItems = new List<int>();
         while (_notResolvedItems.TryTake(out var item))
         {
@@ -179,6 +187,11 @@ public class AzureService : BaseNotifyPropertyChanged,
         }
         catch
         {
+            foreach (var notResolvedItem in notResolvedItems)
+            {
+                _notResolvedItems.Add(notResolvedItem);
+            }
+
             return;
         }
 
@@ -206,6 +219,7 @@ public class AzureService : BaseNotifyPropertyChanged,
                 Release = TryGetField(item.Fields, AzureFields.CUSTOM_RELEASE)?.ToString(),
                 ParentId = parentId,
                 Type = type,
+                Uri = TryGetLink(item.Links.Links, AzureLinks.HTML)
             };
 
             _cache.Set(azureItem.Id.ToString(), azureItem, DateTimeOffset.Now + TimeSpan.FromDays(1));
@@ -220,7 +234,7 @@ public class AzureService : BaseNotifyPropertyChanged,
             return Array.Empty<WorkItem>();
         }
 
-        var uri = new Uri("https://dev.azure.com/" + settings.Project);
+        var uri = new Uri(HTTPS_DEV_AZURE_COM + settings.Project);
         var credentials = new VssBasicCredential(string.Empty, settings.Secret);
 
         using var httpClient = new WorkItemTrackingHttpClient(uri, credentials);
@@ -236,7 +250,7 @@ public class AzureService : BaseNotifyPropertyChanged,
             AzureFields.SYSTEM_WORK_ITEM_TYPE,
         };
 
-        var workItems = await httpClient.GetWorkItemsAsync(items, fields);
+        var workItems = await httpClient.GetWorkItemsAsync(items, expand: WorkItemExpand.Links, fields: fields);
         var taskItems = workItems.Where(i => i.Fields.TryGetValue(AzureFields.SYSTEM_WORK_ITEM_TYPE, out var type) && Equals(type, "Task")).ToList();
         if (taskItems.Any())
         {

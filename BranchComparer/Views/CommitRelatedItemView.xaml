@@ -62,7 +62,7 @@
 
     </tilesContentControl:TilesContentControl.Resources>
     <tilesContentControl:TilesContentControl.ColumnDefinitions>
-        <ColumnDefinition Width="30" />
+        <ColumnDefinition Width="40" />
         <ColumnDefinition Width="70" />
         <ColumnDefinition Width="40" />
     </tilesContentControl:TilesContentControl.ColumnDefinitions>
@@ -71,13 +71,15 @@
                    VerticalAlignment="Center"
                    Foreground="{theme:Brush Main}"
                    FontSize="{theme:FontSize S}"
-                   Text="{Binding Type}"
+                   Text="{Binding Type, Converter={x:Static ps:StringConverters.DisplayName}}"
+                   ToolTip="{Binding Type}"
                    TextTrimming="CharacterEllipsis" />
     </tilesContentControl:TilesContentControlItem>
     <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
         <controls:LinkButton HorizontalAlignment="Center"
                              VerticalAlignment="Center"
                              Foreground="{theme:Brush Main}"
+                             Command="{Binding NavigateCommand}"
                              FontSize="{theme:FontSize S}"
                              Text="{Binding Id}" />
     </tilesContentControl:TilesContentControlItem>
