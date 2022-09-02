@@ -1,5 +1,4 @@
-﻿using System;
-using BranchComparer.Infrastructure.Services;
+﻿using BranchComparer.Infrastructure.Services;
 using Newtonsoft.Json;
 
 namespace BranchComparer.Settings;

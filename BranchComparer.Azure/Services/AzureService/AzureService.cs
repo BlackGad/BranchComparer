@@ -11,6 +11,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using PS;
+using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
@@ -40,7 +41,7 @@ public class AzureService : BaseNotifyPropertyChanged,
 
         return null;
     }
-    
+
     private static Uri TryGetLink(IReadOnlyDictionary<string, object> links, string key)
     {
         if (links.TryGetValue(key, out var value) && value is ReferenceLink link)
@@ -50,7 +51,7 @@ public class AzureService : BaseNotifyPropertyChanged,
 
         return null;
     }
-    
+
     private readonly ThrottlingTrigger _applySettingsTrigger;
     private readonly IBroadcastService _broadcastService;
     private readonly ThrottlingTrigger _itemsResolveRequiredTrigger;
@@ -108,7 +109,7 @@ public class AzureService : BaseNotifyPropertyChanged,
         Application.Current.Dispatcher.Postpone(() => base.OnPropertyChanged(propertyName));
     }
 
-    public AzureItem GetItem(int id)
+    public IEnumerable<AzureItem> GetItems(IEnumerable<int> ids)
     {
         var settings = _settingsService.GetSettings<AzureSettings>();
         if (settings == null)
@@ -116,15 +117,18 @@ public class AzureService : BaseNotifyPropertyChanged,
             return null;
         }
 
-        if (_cache?.Get(id.ToString()) is AzureItem cachedValue)
+        var required = ids.Enumerate().Distinct().ToDictionary(id => id.ToString(), id => id);
+
+        var cachedItems = _cache?.GetValues(required.Keys) ?? new Dictionary<string, object>();
+        var missedItems = required.Keys.Except(cachedItems.Keys);
+        foreach (var missedItem in missedItems)
         {
-            return cachedValue;
+            _notResolvedItems.Add(required[missedItem]);
         }
 
-        _notResolvedItems.Add(id);
         _itemsResolveRequiredTrigger.Trigger();
 
-        return null;
+        return cachedItems.Values.Enumerate<AzureItem>();
     }
 
     public void InvalidateSettings()
@@ -171,11 +175,7 @@ public class AzureService : BaseNotifyPropertyChanged,
         if (_cache != null)
         {
             var values = _cache.GetValues(notResolvedItems.Select(i => i.ToString()));
-            foreach (var azureItem in values.Values.OfType<AzureItem>())
-            {
-                _broadcastService.Broadcast(new AzureItemResolvedArgs(azureItem));
-            }
-
+            _broadcastService.Broadcast(new AzureItemsResolvedArgs(values.Values.OfType<AzureItem>().ToList()));
             notResolvedItems = notResolvedItems.Except(values.Keys.Select(int.Parse)).ToList();
         }
 
@@ -195,6 +195,7 @@ public class AzureService : BaseNotifyPropertyChanged,
             return;
         }
 
+        var resolvedItems = new List<AzureItem>();
         foreach (var item in items)
         {
             if (!item.Id.HasValue)
@@ -202,7 +203,12 @@ public class AzureService : BaseNotifyPropertyChanged,
                 continue;
             }
 
-            int.TryParse(TryGetField(item.Fields, AzureFields.SYSTEM_PARENT)?.ToString(), out var parentId);
+            int? parentId = null;
+            if (int.TryParse(TryGetField(item.Fields, AzureFields.SYSTEM_PARENT)?.ToString(), out var parsedParentId))
+            {
+                parentId = parsedParentId;
+            }
+
             var type = TryGetField(item.Fields, AzureFields.SYSTEM_WORK_ITEM_TYPE) switch
             {
                 "Product Backlog Item" => AzureItemType.PBI,
@@ -219,12 +225,14 @@ public class AzureService : BaseNotifyPropertyChanged,
                 Release = TryGetField(item.Fields, AzureFields.CUSTOM_RELEASE)?.ToString(),
                 ParentId = parentId,
                 Type = type,
-                Uri = TryGetLink(item.Links.Links, AzureLinks.HTML)
+                Uri = TryGetLink(item.Links.Links, AzureLinks.HTML),
             };
 
             _cache.Set(azureItem.Id.ToString(), azureItem, DateTimeOffset.Now + TimeSpan.FromDays(1));
-            _broadcastService.Broadcast(new AzureItemResolvedArgs(azureItem));
+            resolvedItems.Add(azureItem);
         }
+
+        _broadcastService.Broadcast(new AzureItemsResolvedArgs(resolvedItems));
     }
 
     private async Task<IReadOnlyList<WorkItem>> GetWorkItemsAsync(IReadOnlyList<int> items, AzureSettings settings)
@@ -257,10 +265,14 @@ public class AzureService : BaseNotifyPropertyChanged,
             var taskParents = taskItems
                               .Select(i => i.Fields.TryGetValue(AzureFields.SYSTEM_PARENT, out var parent) ? parent : null)
                               .Where(id => id is not null)
-                              .Select(Convert.ToInt32)
-                              .ToArray();
+                              .Select(Convert.ToInt32);
 
-            result.AddRange(await GetWorkItemsAsync(taskParents, settings));
+            foreach (var taskParent in taskParents)
+            {
+                _notResolvedItems.Add(taskParent);
+            }
+
+            _itemsResolveRequiredTrigger.Trigger();
         }
 
         result.AddRange(workItems);

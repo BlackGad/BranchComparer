@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Services.GitService;
 using PS;

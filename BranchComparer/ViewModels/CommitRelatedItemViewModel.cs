@@ -1,17 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
 using BranchComparer.Infrastructure;
-using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services.AzureService;
 using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
-using PS.MVVM.Patterns.Aware;
-using PS.MVVM.Services;
-using PS.MVVM.Services.Extensions;
 using PS.WPF.Extensions;
 using PS.WPF.Patterns.Command;
 
@@ -19,25 +13,16 @@ namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
 public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
-                                          IViewModel,
-                                          ILoadedAware,
-                                          IUnloadedAware
+                                          IViewModel
 {
-    private readonly IAzureService _azureService;
-    private readonly IBroadcastService _broadcastService;
-
+    private int? _parentId;
     private Version _release;
-
     private string _title;
-
     private AzureItemType _type;
-
     private Uri _uri;
 
-    public CommitRelatedItemViewModel(int id, IAzureService azureService, IBroadcastService broadcastService)
+    public CommitRelatedItemViewModel(int id)
     {
-        _azureService = azureService;
-        _broadcastService = broadcastService;
         Id = id;
         NavigateCommand = new RelayUICommand(Navigate);
     }
@@ -45,6 +30,12 @@ public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
     public int Id { get; }
 
     public IUICommand NavigateCommand { get; }
+
+    public int? ParentId
+    {
+        get { return _parentId; }
+        set { SetField(ref _parentId, value); }
+    }
 
     public Version Release
     {
@@ -75,29 +66,12 @@ public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
         Application.Current.Dispatcher.Postpone(() => base.OnPropertyChanged(propertyName));
     }
 
-    public void Loaded()
+    public void ApplyResolvedInformation(AzureItem resolvedItem)
     {
-        _broadcastService.Subscribe<AzureItemResolvedArgs>(OnAzureItemResolved);
-
-        var resolvedItem = _azureService.GetItem(Id);
-        if (resolvedItem != null)
-        {
-            ApplyResolvedInformation(resolvedItem);
-        }
-    }
-
-    public void Unloaded()
-    {
-        _broadcastService.Unsubscribe<AzureItemResolvedArgs>(OnAzureItemResolved);
-    }
-
-    private void ApplyResolvedInformation(AzureItem resolvedItem)
-    {
-        _broadcastService.Unsubscribe<AzureItemResolvedArgs>(OnAzureItemResolved);
-
         Type = resolvedItem.Type;
         Title = resolvedItem.Title;
         Uri = resolvedItem.Uri;
+        ParentId = resolvedItem.ParentId;
 
         var versionParts = Regex.Matches(resolvedItem.Release ?? string.Empty, @"(\d+)\.?")
                                 .Where(m => m.Success)
@@ -132,15 +106,5 @@ public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
         {
             throw new NotificationException("Cannot navigate to Azure item", e);
         }
-    }
-
-    private void OnAzureItemResolved(AzureItemResolvedArgs args)
-    {
-        if (args.Item.Id != Id)
-        {
-            return;
-        }
-
-        ApplyResolvedInformation(args.Item);
     }
 }

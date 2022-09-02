@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Autofac;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
+using BranchComparer.Providers.WorkingBranchesProvider.CherryPickDetectors;
 using BranchComparer.Services.FilterService;
 using BranchComparer.Settings;
 using BranchComparer.ViewModels;
@@ -17,7 +15,7 @@ using PS.MVVM.Services.Extensions;
 using PS.Threading.ThrottlingTrigger;
 using PS.WPF.Extensions;
 
-namespace BranchComparer.Providers;
+namespace BranchComparer.Providers.WorkingBranchesProvider;
 
 [DependencyRegisterAsSelf]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
@@ -26,6 +24,7 @@ internal class WorkingBranchesProvider : IDisposable
 {
     private readonly IBroadcastService _broadcastService;
     private readonly IBusyService _busyService;
+    private readonly IReadOnlyList<ICherryPickDetector> _cherryPickDetectors;
     private readonly IFilterService _filterService;
     private readonly IGitService _gitService;
     private readonly IModelResolverService _modelResolverService;
@@ -40,7 +39,8 @@ internal class WorkingBranchesProvider : IDisposable
         IGitService gitService,
         IBroadcastService broadcastService,
         IFilterService filterService,
-        IModelResolverService modelResolverService)
+        IModelResolverService modelResolverService,
+        IEnumerable<ICherryPickDetector> cherryPickDetectors)
     {
         _busyService = busyService;
         _scope = scope;
@@ -49,6 +49,7 @@ internal class WorkingBranchesProvider : IDisposable
         _broadcastService = broadcastService;
         _filterService = filterService;
         _modelResolverService = modelResolverService;
+        _cherryPickDetectors = cherryPickDetectors.Enumerate().ToList();
 
         _broadcastService.Subscribe<ServiceStateChangedArgs<IGitService>>(GitServiceStateChanged);
         _broadcastService.Subscribe<SettingsChangedArgs<FilterSettings>>(OnFilterSettingsChanged);
@@ -75,7 +76,7 @@ internal class WorkingBranchesProvider : IDisposable
     {
         IReadOnlyList<CommitViewModel> leftBranch;
         IReadOnlyList<CommitViewModel> rightBranch;
-        IReadOnlyList<CommitCherryPickViewModel> cherryPicks;
+        IReadOnlyList<CommitCherryPick> cherryPicks;
 
         var busyState = _busyService.Push("Resolving commits");
 
@@ -84,8 +85,8 @@ internal class WorkingBranchesProvider : IDisposable
             var commitsFilterSettings = _settingsService.GetSettings<FilterSettings>();
             var branchSettings = _settingsService.GetSettings<BranchSettings>();
 
-            IEnumerable<Commit> leftCommits;
-            IEnumerable<Commit> rightCommits;
+            IReadOnlyList<Commit> leftCommits;
+            IReadOnlyList<Commit> rightCommits;
 
             if (commitsFilterSettings.ShowUniqueCommits)
             {
@@ -98,10 +99,10 @@ internal class WorkingBranchesProvider : IDisposable
                 rightCommits = _gitService.GetCommits(branchSettings.Right, null);
             }
 
-            var leftEnvironmentCommits = TransformCommits(leftCommits);
-            var rightEnvironmentCommits = TransformCommits(rightCommits);
+            cherryPicks = DetectCherryPicks(leftCommits, rightCommits);
 
-            cherryPicks = DetectCherryPicks(leftEnvironmentCommits, rightEnvironmentCommits).ToList();
+            var leftEnvironmentCommits = TransformCommits(leftCommits, cherryPicks);
+            var rightEnvironmentCommits = TransformCommits(rightCommits, cherryPicks);
 
             leftBranch = _filterService.FilterCommits(leftEnvironmentCommits, cherryPicks);
             rightBranch = _filterService.FilterCommits(rightEnvironmentCommits, cherryPicks);
@@ -110,7 +111,7 @@ internal class WorkingBranchesProvider : IDisposable
         {
             leftBranch = Array.Empty<CommitViewModel>();
             rightBranch = Array.Empty<CommitViewModel>();
-            cherryPicks = Array.Empty<CommitCherryPickViewModel>();
+            cherryPicks = Array.Empty<CommitCherryPick>();
         }
         finally
         {
@@ -136,39 +137,12 @@ internal class WorkingBranchesProvider : IDisposable
         });
     }
 
-    private IEnumerable<CommitCherryPickViewModel> DetectCherryPicks(IReadOnlyList<CommitViewModel> leftEnvironmentCommits, IReadOnlyList<CommitViewModel> rightEnvironmentCommits)
+    private IReadOnlyList<CommitCherryPick> DetectCherryPicks(IReadOnlyList<Commit> leftEnvironmentCommits, IReadOnlyList<Commit> rightEnvironmentCommits)
     {
-        int Hasher(CommitViewModel commit)
-        {
-            return HashCode.Combine(commit.ShortMessage);
-        }
-
-        return leftEnvironmentCommits
-               .Compare(rightEnvironmentCommits, Hasher)
-               .PresentInBoth
-               .Where(tuple => tuple.Item1.Id != tuple.Item2.Id)
-               .Select(tuple =>
-               {
-                   var first = tuple.Item1;
-                   var second = tuple.Item2;
-
-                   var viewModel = _scope.Resolve<CommitCherryPickViewModel>();
-                   if (first.CommitterTime > second.CommitterTime)
-                   {
-                       viewModel.Source = second;
-                       viewModel.Target = first;
-                   }
-                   else
-                   {
-                       viewModel.Source = first;
-                       viewModel.Target = second;
-                   }
-
-                   first.AddCherryPickReference(viewModel);
-                   second.AddCherryPickReference(viewModel);
-
-                   return viewModel;
-               });
+        return _cherryPickDetectors
+               .SelectMany(detector => detector.Detect(leftEnvironmentCommits, rightEnvironmentCommits))
+               .Distinct()
+               .ToList();
     }
 
     private void GitServiceStateChanged(ServiceStateChangedArgs<IGitService> args)
@@ -186,22 +160,14 @@ internal class WorkingBranchesProvider : IDisposable
         _updateModelsTrigger.Trigger();
     }
 
-    private IReadOnlyList<CommitViewModel> TransformCommits(IEnumerable<Commit> commits)
+    private IEnumerable<CommitViewModel> TransformCommits(IEnumerable<Commit> commits, IReadOnlyList<CommitCherryPick> cherryPicks)
     {
         return commits.Select(c =>
         {
-            var commitViewModel = _scope.Resolve<CommitViewModel>();
-
-            commitViewModel.Author = c.Author;
-            commitViewModel.Message = c.Message;
-            commitViewModel.ShortMessage = c.MessageShort;
-            commitViewModel.AuthorTime = c.AuthorTime;
-            commitViewModel.CommitterTime = c.CommitterTime;
-            commitViewModel.PRs = c.MergedPRs.Select(i => _scope.Resolve<CommitPRViewModel>(TypedParameter.From(i))).ToList();
-            commitViewModel.RelatedItems = c.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList();
-            commitViewModel.Id = c.Id;
-
-            return commitViewModel;
+            var referencedCherryPicks = cherryPicks.Where(cherry => cherry.SourceId == c.Id || cherry.TargetId == c.Id);
+            return _scope.Resolve<CommitViewModel>(
+                TypedParameter.From(c),
+                TypedParameter.From(referencedCherryPicks));
         }).ToList();
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using PS.WPF.Resources;
 
@@ -73,7 +72,7 @@ public class CommitsView : ListBox
 
     public void BringIntoViewPublic(object item)
     {
-        if (!ItemContainerGenerator.Items.Contains(item))
+        if (item == null || !ItemContainerGenerator.Items.Contains(item))
         {
             return;
         }

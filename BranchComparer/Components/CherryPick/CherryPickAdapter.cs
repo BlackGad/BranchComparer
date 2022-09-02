@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using Autofac;
 using BranchComparer.Controls.CommitsView;
+using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.ViewModels;
 using BranchComparer.Views;
 using PS.Extensions;
@@ -29,9 +27,9 @@ public class CherryPickAdapter : Adapter<FrameworkElement>
         typeof(CherryPickRegisterEventHandler),
         typeof(CherryPickAdapter));
 
-    public static void RaiseBringCherryPickToViewEvent(UIElement source, CommitCherryPickViewModel cherryPickViewModel)
+    public static void RaiseBringCherryPickToViewEvent(UIElement source, CommitCherryPick cherryPick)
     {
-        source.RaiseEvent(new CherryPickEventArgs(BringCherryPickToViewEvent, source, cherryPickViewModel));
+        source.RaiseEvent(new CherryPickEventArgs(BringCherryPickToViewEvent, source, cherryPick));
     }
 
     public static void RaiseRegisterEvent(UIElement element)
@@ -86,8 +84,10 @@ public class CherryPickAdapter : Adapter<FrameworkElement>
     {
         foreach (var view in _commitsViews.Select(c => c.Target).Enumerate<CommitsView>())
         {
-            view.BringIntoViewPublic(e.CherryPickViewModel.Source);
-            view.BringIntoViewPublic(e.CherryPickViewModel.Target);
+            var resolvedSourceCommitViewModel = view.Items.Enumerate<CommitViewModel>().FirstOrDefault(i => i.Commit.Id == e.CherryPick.SourceId);
+            var resolvedTargetCommitViewModel = view.Items.Enumerate<CommitViewModel>().FirstOrDefault(i => i.Commit.Id == e.CherryPick.TargetId);
+            view.BringIntoViewPublic(resolvedSourceCommitViewModel);
+            view.BringIntoViewPublic(resolvedTargetCommitViewModel);
         }
     }
 

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BranchComparer.Infrastructure.Services;
+﻿using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.Settings;
 using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
@@ -19,23 +17,23 @@ internal class FilterService : IFilterService
         _settingsService = settingsService;
     }
 
-    public IReadOnlyList<CommitViewModel> FilterCommits(IEnumerable<CommitViewModel> commits, IReadOnlyList<CommitCherryPickViewModel> cherryPicks)
+    public IReadOnlyList<CommitViewModel> FilterCommits(IEnumerable<CommitViewModel> commits, IReadOnlyList<CommitCherryPick> cherryPicks)
     {
         var settings = _settingsService.GetSettings<FilterSettings>();
         if (settings.ExcludeCherryPicks)
         {
-            commits = commits.Where(c => cherryPicks.All(p => p.Source != c && p.Target != c));
+            commits = commits.Where(c => cherryPicks.All(p => p.SourceId != c.Commit.Id && p.TargetId != c.Commit.Id));
         }
 
         if (settings.Period.HasValue)
         {
             var untilTime = DateTime.Now - settings.Period.Value;
-            commits = commits.Where(c => c.AuthorTime >= untilTime);
+            commits = commits.Where(c => c.Commit.AuthorTime >= untilTime);
         }
 
         if (!string.IsNullOrEmpty(settings.Message))
         {
-            commits = commits.Where(c => c.Message.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase));
+            commits = commits.Where(c => c.Commit.Message.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase));
         }
 
         return commits.ToList();

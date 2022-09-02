@@ -1,15 +1,15 @@
 ﻿using System.Windows;
-using BranchComparer.ViewModels;
+using BranchComparer.Infrastructure.Services.GitService;
 
 namespace BranchComparer.Components.CherryPick;
 
 public sealed class CherryPickEventArgs : RoutedEventArgs
 {
-    public CherryPickEventArgs(RoutedEvent routedEvent, object source, CommitCherryPickViewModel cherryPickViewModel)
+    public CherryPickEventArgs(RoutedEvent routedEvent, object source, CommitCherryPick cherryPick)
         : base(routedEvent, source)
     {
-        CherryPickViewModel = cherryPickViewModel;
+        CherryPick = cherryPick;
     }
 
-    public CommitCherryPickViewModel CherryPickViewModel { get; }
+    public CommitCherryPick CherryPick { get; }
 }

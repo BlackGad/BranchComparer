@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services.GitService;

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.IsolatedStorage;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using BranchComparer.Infrastructure.Events;

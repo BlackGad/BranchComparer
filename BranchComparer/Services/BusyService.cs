@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using BranchComparer.Infrastructure.Services;
+﻿using BranchComparer.Infrastructure.Services;
 using PS.IoC.Attributes;
 using PS.WPF.Controls.BusyContainer;
 

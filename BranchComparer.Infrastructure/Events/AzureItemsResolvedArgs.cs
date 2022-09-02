@@ -2,4 +2,4 @@
 
 namespace BranchComparer.Infrastructure.Events;
 
-public record AzureItemResolvedArgs(AzureItem Item);
+public record AzureItemsResolvedArgs(IReadOnlyList<AzureItem> Items);

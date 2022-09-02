@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.Settings;
-using BranchComparer.ViewModels;
 using BranchComparer.Views;
 using PS.Extensions;
 using PS.IoC.Attributes;
@@ -53,16 +50,16 @@ public class CherryPicksAdorner : Adorner
         var activeViews = _views
                           .Select(v => v.Target as CommitView)
                           .Where(v => v?.ViewModel is not null)
-                          .ToDictionary(v => v.ViewModel, v => v);
+                          .ToDictionary(v => v.ViewModel.Commit.Id, v => v);
 
-        foreach (var cherryPick in _modelResolverService.Collection(Regions.CHERRY_PICKS).Enumerate<CommitCherryPickViewModel>())
+        foreach (var cherryPick in _modelResolverService.Collection(Regions.CHERRY_PICKS).Enumerate<CommitCherryPick>())
         {
-            if (!activeViews.TryGetValue(cherryPick.Source, out var resolvedSourceView))
+            if (!activeViews.TryGetValue(cherryPick.SourceId, out var resolvedSourceView))
             {
                 continue;
             }
 
-            if (!activeViews.TryGetValue(cherryPick.Target, out var resolvedTargetView))
+            if (!activeViews.TryGetValue(cherryPick.TargetId, out var resolvedTargetView))
             {
                 continue;
             }

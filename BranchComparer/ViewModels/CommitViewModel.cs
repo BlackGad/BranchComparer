@@ -1,69 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using Autofac;
+using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.AzureService;
+using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.Settings;
 using PS;
+using PS.Extensions;
 using PS.IoC.Attributes;
+using PS.MVVM.Patterns.Aware;
+using PS.MVVM.Services;
+using PS.MVVM.Services.Extensions;
 
 namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
-public class CommitViewModel : BaseNotifyPropertyChanged
+public class CommitViewModel : BaseNotifyPropertyChanged,
+                               ILoadedAware,
+                               IUnloadedAware
 {
-    private string _author;
-    private DateTimeOffset _authorTime;
-    private WeakReference _cherryPick;
-    private DateTimeOffset _committerTime;
-    private string _id;
-    private string _message;
+    private readonly IAzureService _azureService;
+    private readonly IBroadcastService _broadcastService;
+    private readonly ILifetimeScope _scope;
+
     private IReadOnlyList<CommitPRViewModel> _prs;
     private IReadOnlyList<CommitRelatedItemViewModel> _relatedItems;
-    private string _shortMessage;
 
-    public CommitViewModel(ISettingsService settingsService)
+    public CommitViewModel(Commit commit,
+                           IEnumerable<CommitCherryPick> cherryPicks,
+                           ILifetimeScope scope,
+                           ISettingsService settingsService,
+                           IAzureService azureService,
+                           IBroadcastService broadcastService)
     {
+        Commit = commit;
+
+        CherryPicks = cherryPicks.Enumerate().ToArray();
+        IsCherryPickPart = CherryPicks.Any();
+
+        _scope = scope;
+        _azureService = azureService;
+        _broadcastService = broadcastService;
         RelatedItems = new ObservableCollection<CommitRelatedItemViewModel>();
 
         VisualizationSettings = settingsService.GetObservableSettings<VisualizationSettings>();
+
+        PRs = commit.MergedPRs.Select(i => _scope.Resolve<CommitPRViewModel>(TypedParameter.From(i))).ToList();
+        RelatedItems = commit.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList();
     }
 
-    public string Author
-    {
-        get { return _author; }
-        set { SetField(ref _author, value); }
-    }
+    public IReadOnlyList<CommitCherryPick> CherryPicks { get; }
 
-    public DateTimeOffset AuthorTime
-    {
-        get { return _authorTime; }
-        set { SetField(ref _authorTime, value); }
-    }
+    public Commit Commit { get; }
 
-    public CommitCherryPickViewModel CherryPickViewModel
-    {
-        get { return _cherryPick?.Target as CommitCherryPickViewModel; }
-    }
-
-    public DateTimeOffset CommitterTime
-    {
-        get { return _committerTime; }
-        set { SetField(ref _committerTime, value); }
-    }
-
-    public string Id
-    {
-        get { return _id; }
-        set { SetField(ref _id, value); }
-    }
-
-    public bool IsCherryPickPart { get; private set; }
-
-    public string Message
-    {
-        get { return _message; }
-        set { SetField(ref _message, value); }
-    }
+    public bool IsCherryPickPart { get; }
 
     public IReadOnlyList<CommitPRViewModel> PRs
     {
@@ -77,17 +67,44 @@ public class CommitViewModel : BaseNotifyPropertyChanged
         set { SetField(ref _relatedItems, value); }
     }
 
-    public string ShortMessage
-    {
-        get { return _shortMessage; }
-        set { SetField(ref _shortMessage, value); }
-    }
-
     public VisualizationSettings VisualizationSettings { get; }
 
-    public void AddCherryPickReference(CommitCherryPickViewModel cherryPickViewModel)
+    public void Loaded()
     {
-        IsCherryPickPart = true;
-        _cherryPick = new WeakReference(cherryPickViewModel);
+        _broadcastService.Subscribe<AzureItemsResolvedArgs>(OnAzureItemResolved);
+
+        var resolvedItems = _azureService.GetItems(RelatedItems.Select(i => i.Id));
+        UpdateRelatedItems(resolvedItems);
+    }
+
+    public void Unloaded()
+    {
+        _broadcastService.Unsubscribe<AzureItemsResolvedArgs>(OnAzureItemResolved);
+    }
+
+    private void OnAzureItemResolved(AzureItemsResolvedArgs args)
+    {
+        UpdateRelatedItems(args.Items);
+    }
+
+    private void UpdateRelatedItems(IEnumerable<AzureItem> items)
+    {
+        var resolveComparison = items.Compare(RelatedItems, item => item.Id.GetHash(), model => model.Id.GetHash());
+        resolveComparison.PresentInBoth.ForEach(t => t.Item2.ApplyResolvedInformation(t.Item1));
+
+        var taskParents = RelatedItems.Where(i => i.Type == AzureItemType.Task && i.ParentId.HasValue).Select(i => i.ParentId.Value);
+        var taskParentsComparison = taskParents.Compare(RelatedItems, i => i.GetHash(), model => model.Id.GetHash());
+
+        if (taskParentsComparison.PresentInFirstOnly.Any())
+        {
+            var additionalTaskParentItems = taskParentsComparison
+                                            .PresentInFirstOnly
+                                            .Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i)))
+                                            .ToList();
+
+            RelatedItems = additionalTaskParentItems.Union(RelatedItems).ToList();
+
+            UpdateRelatedItems(_azureService.GetItems(taskParentsComparison.PresentInFirstOnly));
+        }
     }
 }

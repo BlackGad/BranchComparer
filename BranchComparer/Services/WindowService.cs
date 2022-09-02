@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Autofac;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;

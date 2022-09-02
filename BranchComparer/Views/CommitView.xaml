@@ -97,7 +97,7 @@
             <tilesContentControl:TilesContentControlItem Background="{theme:Brush MainBorderDeep}">
                 <TextBlock Foreground="{theme:Brush Main}"
                            FontSize="{theme:FontSize S}"
-                           Text="{Binding ShortMessage}"
+                           Text="{Binding Commit.MessageShort}"
                            TextTrimming="CharacterEllipsis"
                            ToolTipService.InitialShowDelay="100">
                     <TextBlock.ToolTip>
@@ -105,7 +105,7 @@
                                  HorizontalOffset="0"
                                  Placement="Bottom">
                             <TextBlock FontSize="{theme:FontSize S}"
-                                       Text="{Binding Message}"
+                                       Text="{Binding Commit.Message}"
                                        TextWrapping="Wrap" />
                         </ToolTip>
                     </TextBlock.ToolTip>

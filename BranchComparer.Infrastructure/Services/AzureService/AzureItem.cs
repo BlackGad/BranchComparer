@@ -5,7 +5,7 @@ public class AzureItem
 {
     public int Id { get; set; }
 
-    public int ParentId { get; set; }
+    public int? ParentId { get; set; }
 
     public string Release { get; set; }
 
