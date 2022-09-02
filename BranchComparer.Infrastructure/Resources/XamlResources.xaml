@@ -4,6 +4,7 @@
                     xmlns:m="http://schemas.ps.com/2019/xaml/markup"
                     xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources"
                     xmlns:switch="http://schemas.ps.com/2019/xaml/switchvalueconverter"
+                    xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
                     xmlns:valueConverters="http://schemas.ps.com/2019/xaml">
     <Style x:Key="{x:Static resources:XamlResources.NotificationStyle}" TargetType="valueConverters:Window">
         <Setter Property="Commands">
@@ -50,24 +51,9 @@
         </Style.Triggers>
     </Style>
 
-    <valueConverters:SwitchValueConverter x:Key="{x:Static resources:XamlResources.ServiceStateColorConverter}">
-        <valueConverters:SwitchValueConverter.ConvertDefault>
-            <SolidColorBrush Color="DarkGray" />
-        </valueConverters:SwitchValueConverter.ConvertDefault>
-        <switch:EqualTo Value="{m:Boolean True}">
-            <switch:EqualTo.Result>
-                <SolidColorBrush Color="Green" />
-            </switch:EqualTo.Result>
-        </switch:EqualTo>
-        <switch:EqualTo Value="{m:Boolean False}">
-            <switch:EqualTo.Result>
-                <SolidColorBrush Color="Red" />
-            </switch:EqualTo.Result>
-        </switch:EqualTo>
+    <valueConverters:SwitchValueConverter x:Key="{x:Static resources:XamlResources.SettingsValidationStateColorConverter}" ConvertDefault="{theme:Brush Main}">
+        <switch:EqualTo Result="{theme:Brush Success}" Value="{m:Boolean True}" />
+        <switch:EqualTo Result="{theme:Brush Failure}" Value="{m:Boolean False}" />
     </valueConverters:SwitchValueConverter>
 
-    <valueConverters:SwitchValueConverter x:Key="{x:Static resources:XamlResources.ServiceStateTitleConverter}" ConvertDefault="Unknown">
-        <switch:EqualTo Result="Valid" Value="{m:Boolean True}" />
-        <switch:EqualTo Result="Invalid" Value="{m:Boolean False}" />
-    </valueConverters:SwitchValueConverter>
 </ResourceDictionary>

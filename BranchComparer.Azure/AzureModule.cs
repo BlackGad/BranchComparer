@@ -26,11 +26,12 @@ public class AzureModule : Module
 
     private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
     {
-        service.Collection(Regions.SETTINGS).Add(scope.Resolve<SettingsViewModel>());
+        service.Collection(VisualRegions.STATUS).Add(scope.Resolve<StatusViewModel>());
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
     {
-        service.AssociateTemplate<SettingsViewModel>(scope.Resolve<IDataTemplate<SettingsView>>());
+        service.AssociateTemplate<StatusViewModel>(scope.Resolve<IDataTemplate<StatusView>>())
+               .AssociateTemplate<SettingsViewModel>(scope.Resolve<IDataTemplate<SettingsView>>());
     }
 }

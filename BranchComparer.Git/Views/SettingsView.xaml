@@ -1,41 +1,46 @@
-﻿<ps:GroupExpander x:Class="BranchComparer.Git.Views.SettingsView"
-                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                  xmlns:ps="http://schemas.ps.com/2019/xaml"
-                  xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
-                  xmlns:viewModels="clr-namespace:BranchComparer.Git.ViewModels"
-                  d:DataContext="{d:DesignInstance viewModels:SettingsViewModel}"
-                  Focusable="False"
-                  Header="Git"
-                  IsExpanded="{Binding IsExpanded}"
-                  ShowIndent="False"
-                  mc:Ignorable="d">
-    <ps:GroupExpander.Resources>
+﻿<StackPanel x:Class="BranchComparer.Git.Views.SettingsView"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:ps="http://schemas.ps.com/2019/xaml"
+            xmlns:resources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
+            xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+            xmlns:viewModels="clr-namespace:BranchComparer.Git.ViewModels"
+            d:DataContext="{d:DesignInstance viewModels:SettingsViewModel}"
+            ps:HeaderedContent.HeaderColumnWidth="150"
+            ps:HeaderedContent.IsResizable="False"
+            Focusable="False"
+            mc:Ignorable="d">
+    <StackPanel.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/Icons.xaml" />
-                <ResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/XamlResources.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-    </ps:GroupExpander.Resources>
-
-    <StackPanel Margin="0,0,0,5">
-        <ps:HeaderedContent Header="Repository directory">
-            <ps:TextBox IsSideButtonVisible="True"
-                        SideButtonCommand="{Binding BrowseGitRepositoryFolderCommand}"
-                        SideButtonGeometry="{StaticResource {x:Static resources:Icons.FileSelectGeometry}}"
-                        Value="{Binding Settings.RepositoryDirectory}" />
-        </ps:HeaderedContent>
-        <ps:HeaderedContent Header="State">
-            <StackPanel Orientation="Horizontal">
-                <ps:Button Width="150"
-                           Background="{Binding Path=GitService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateColorConverter}}}"
-                           Command="{Binding InvalidateGitSettingsCommand}"
-                           Content="{Binding Path=GitService.State.IsValid, Converter={StaticResource {x:Static resources:XamlResources.ServiceStateTitleConverter}}}"
-                           ToolTip="{Binding GitService.State.Description}" />
-            </StackPanel>
-        </ps:HeaderedContent>
-    </StackPanel>
-</ps:GroupExpander>
+    </StackPanel.Resources>
+    <Border Background="{theme:Brush Accent}" BorderThickness="0">
+        <TextBlock Margin="3"
+                   Foreground="{theme:Brush AccentForeground}"
+                   Text="Git settings" />
+    </Border>
+    <ps:HeaderedContent Header="Repository directory">
+        <ps:TextBox IsSideButtonVisible="True"
+                    SideButtonCommand="{Binding BrowseGitRepositoryFolderCommand}"
+                    SideButtonGeometry="{StaticResource {x:Static resources:Icons.FileSelectGeometry}}"
+                    Value="{Binding Settings.RepositoryDirectory}" />
+    </ps:HeaderedContent>
+    <ps:HeaderedContent Header="Secret">
+        <ps:PasswordBox IsSideButtonVisible="True" Value="{Binding Settings.Username}" />
+    </ps:HeaderedContent>
+    <ps:HeaderedContent Header="Show unique commits">
+        <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding Settings.ShowUniqueCommits}" />
+    </ps:HeaderedContent>
+    <ps:HeaderedContent Header="Actions">
+        <StackPanel Orientation="Horizontal">
+            <ps:Button Width="150"
+                       Command="{Binding UpdateRemoteCommand}"
+                       Content="Update remotes" />
+        </StackPanel>
+    </ps:HeaderedContent>
+</StackPanel>

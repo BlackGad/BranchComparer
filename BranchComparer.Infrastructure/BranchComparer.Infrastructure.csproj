@@ -7,9 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FluentValidation" Version="11.2.0" />
+		<PackageReference Include="FluentValidation" Version="11.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="PS.MVVM.WPF" Version="2.9.5" />
+		<PackageReference Include="PS.MVVM.WPF" Version="9999.2209.1012.5842-Local" />
 	</ItemGroup>
 
 </Project>

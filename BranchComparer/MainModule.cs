@@ -31,8 +31,8 @@ public class MainModule : Module
 
     private void ModelResolverServiceActivation(ILifetimeScope scope, IModelResolverService service)
     {
-        service.Object(Regions.FILTER).Value = scope.Resolve<FilterViewModel>();
-        service.Object(Regions.VISUALIZATION).Value = scope.Resolve<VisualizationViewModel>();
+        service.Object(VisualRegions.FILTER).Value = scope.Resolve<FilterViewModel>();
+        service.Object(VisualRegions.VISUALIZATION).Value = scope.Resolve<VisualizationViewModel>();
     }
 
     private void ViewResolverServiceActivation(ILifetimeScope scope, IViewResolverService service)
@@ -49,6 +49,7 @@ public class MainModule : Module
 
         service.AssociateTemplate<FilterViewModel>(scope.Resolve<IDataTemplate<FilterView>>())
                .AssociateTemplate<CommitViewModel>(scope.Resolve<IDataTemplate<CommitView>>())
+               .AssociateTemplate<CommitDetailsViewModel>(scope.Resolve<IDataTemplate<CommitDetailsView>>())
                .AssociateTemplate<CommitPRViewModel>(scope.Resolve<IDataTemplate<CommitPRView>>())
                .AssociateTemplate<CommitRelatedItemViewModel>(scope.Resolve<IDataTemplate<CommitRelatedItemView>>())
                .AssociateTemplate<VisualizationViewModel>(scope.Resolve<IDataTemplate<VisualizationView>>());

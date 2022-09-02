@@ -15,6 +15,7 @@ namespace BranchComparer.ViewModels;
 public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
                                           IViewModel
 {
+    private string _hotfix;
     private int? _parentId;
     private Version _release;
     private string _title;
@@ -25,6 +26,12 @@ public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
     {
         Id = id;
         NavigateCommand = new RelayUICommand(Navigate);
+    }
+
+    public string Hotfix
+    {
+        get { return _hotfix; }
+        set { SetField(ref _hotfix, value); }
     }
 
     public int Id { get; }
@@ -86,6 +93,8 @@ public class CommitRelatedItemViewModel : BaseNotifyPropertyChanged,
             { Count: 4, } => new Version(versionParts[0], versionParts[1], versionParts[2], versionParts[3]),
             _ => null,
         };
+
+        Hotfix = resolvedItem.Hotfix;
     }
 
     private void Navigate()

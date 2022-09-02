@@ -1,16 +1,11 @@
-﻿using System.Windows;
-using BranchComparer.Git.Settings;
+﻿using BranchComparer.Git.Settings;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
-using FluentValidation;
 using LibGit2Sharp;
-using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
-using PS.Threading;
-using PS.WPF.Extensions;
 using Commit = BranchComparer.Infrastructure.Services.GitService.Commit;
 
 namespace BranchComparer.Git.Services;
@@ -18,52 +13,20 @@ namespace BranchComparer.Git.Services;
 [DependencyRegisterAsInterface(typeof(IGitService))]
 [DependencyRegisterAsSelf]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
-public class GitService : BaseNotifyPropertyChanged,
-                          IGitService,
-                          IDisposable
+public class GitService : IGitService
 {
     private readonly IBroadcastService _broadcastService;
-    private readonly IValidator<GitSettings> _settingsValidator;
-    private GitSettings _settings;
-    private ServiceState _state;
+    private readonly ISettingsService _settingsService;
 
-    public GitService(ISettingsService settingsService, IBroadcastService broadcastService, IValidator<GitSettings> settingsValidator)
+    public GitService(ISettingsService settingsService, IBroadcastService broadcastService)
     {
+        _settingsService = settingsService;
         _broadcastService = broadcastService;
-        _settingsValidator = settingsValidator;
-
-        _broadcastService.Subscribe<SettingsChangedArgs<GitSettings>>(OnSettingsChanged);
-
-        ApplySettings(settingsService.GetSettings<GitSettings>());
-    }
-
-    public ServiceState State
-    {
-        get { return _state; }
-        set
-        {
-            if (SetField(ref _state, value))
-            {
-                var eventType = typeof(ServiceStateChangedArgs<>).MakeGenericType(typeof(IGitService));
-                var args = Activator.CreateInstance(eventType, _state);
-                _broadcastService.Broadcast(eventType, args);
-            }
-        }
-    }
-
-    protected override void OnPropertyChanged(string propertyName = null)
-    {
-        Application.Current.Dispatcher.Postpone(() => base.OnPropertyChanged(propertyName));
-    }
-
-    public void Dispose()
-    {
-        _broadcastService.Unsubscribe<SettingsChangedArgs<GitSettings>>(OnSettingsChanged);
     }
 
     public IReadOnlyList<string> GetAvailableBranches()
     {
-        var settings = GetSettings();
+        var settings = _settingsService.GetSettings<GitSettings>();
         using var repo = new Repository(settings.RepositoryDirectory);
         return repo.Branches.Where(b => b.IsRemote).Select(b => b.FriendlyName).ToList();
     }
@@ -75,7 +38,7 @@ public class GitService : BaseNotifyPropertyChanged,
             return Array.Empty<Commit>();
         }
 
-        var settings = GetSettings();
+        var settings = _settingsService.GetSettings<GitSettings>();
 
         using var repo = new Repository(settings.RepositoryDirectory);
 
@@ -106,9 +69,9 @@ public class GitService : BaseNotifyPropertyChanged,
                    .ToList();
     }
 
-    public Uri GetPRItemUri(int id)
+    public Uri GetPullRequestUri(int id)
     {
-        var settings = GetSettings();
+        var settings = _settingsService.GetSettings<GitSettings>();
         using var repo = new Repository(settings.RepositoryDirectory);
 
         var remote = repo.Network.Remotes.FirstOrDefault();
@@ -126,40 +89,31 @@ public class GitService : BaseNotifyPropertyChanged,
         return builder.Uri;
     }
 
-    public void InvalidateSettings()
+    public void UpdateRemotes()
     {
-        ApplySettings(_settings);
-    }
+        var settings = _settingsService.GetSettings<GitSettings>();
+        using var repo = new Repository(settings.RepositoryDirectory);
 
-    private void ApplySettings(GitSettings settings)
-    {
-        var validationResult = Async.Run(async () => await _settingsValidator.ValidateAsync(settings));
-
-        lock (this)
+        var options = new FetchOptions
         {
-            State = validationResult.IsValid
-                ? new ServiceState(true, "Settings are valid")
-                : new ServiceState(false, string.Join(Environment.NewLine, validationResult.Errors.Select(e => e.ErrorMessage)));
-
-            _settings = settings;
-        }
-    }
-
-    private GitSettings GetSettings()
-    {
-        lock (this)
-        {
-            if (State.IsValid != true)
+            Prune = true,
+            TagFetchMode = TagFetchMode.Auto,
+            CredentialsProvider = (_, _, _) => new UsernamePasswordCredentials
             {
-                throw new InvalidOperationException($"Settings are not valid. {State.Description}");
-            }
+                Username = settings.Username ?? string.Empty,
+                Password = settings.Password ?? string.Empty,
+            },
+        };
 
-            return _settings;
+        var remote = repo.Network.Remotes.FirstOrDefault();
+        if (remote == null)
+        {
+            return;
         }
-    }
 
-    private void OnSettingsChanged(SettingsChangedArgs<GitSettings> args)
-    {
-        ApplySettings(args.Settings);
+        var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
+        repo.Network.Fetch(remote.Name, refSpecs, options);
+
+        _broadcastService.Broadcast(new RefreshBranchesArgs());
     }
 }

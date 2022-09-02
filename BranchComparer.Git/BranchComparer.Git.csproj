@@ -5,12 +5,18 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="5.0.2" />
-		<PackageReference Include="PS.IoC.Autofac" Version="2.9.5" />
+		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="PS.IoC.Autofac" Version="9999.2209.1012.5842-Local" />
 		<PackageReference Include="LibGit2Sharp" Version="0.26.2" />
-		<PackageReference Include="PS.Windows.Interop" Version="2.9.5" />
+		<PackageReference Include="PS.Windows.Interop" Version="9999.2209.1012.5842-Local" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\BranchComparer.Infrastructure\BranchComparer.Infrastructure.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="XamlResources.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
 	</ItemGroup>
 </Project>

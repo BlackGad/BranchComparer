@@ -3,6 +3,8 @@
 [Serializable]
 public class AzureItem
 {
+    public string Hotfix { get; set; }
+
     public int Id { get; set; }
 
     public int? ParentId { get; set; }

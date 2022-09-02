@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.Caching;
-using System.Windows;
 using BranchComparer.Azure.Settings;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
@@ -10,7 +9,6 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
-using PS;
 using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
@@ -19,16 +17,13 @@ using PS.Runtime.Caching;
 using PS.Runtime.Caching.Default;
 using PS.Threading;
 using PS.Threading.ThrottlingTrigger;
-using PS.WPF.Extensions;
 
 namespace BranchComparer.Azure.Services.AzureService;
 
 [DependencyRegisterAsInterface(typeof(IAzureService))]
 [DependencyRegisterAsSelf]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
-public class AzureService : BaseNotifyPropertyChanged,
-                            IAzureService,
-                            IDisposable
+public class AzureService : IAzureService
 {
     private const string HTTPS_DEV_AZURE_COM = "https://dev.azure.com/";
 
@@ -61,7 +56,6 @@ public class AzureService : BaseNotifyPropertyChanged,
     private readonly IValidator<AzureSettings> _settingsValidator;
     private ObjectCache _cache;
     private DefaultRepository _cacheRepository;
-    private ServiceState _state;
 
     public AzureService(
         ISettingsService settingsService,
@@ -86,27 +80,19 @@ public class AzureService : BaseNotifyPropertyChanged,
         _broadcastService.Subscribe<SettingsChangedArgs<AzureSettings>>(OnSettingsChanged);
 
         _applySettingsTrigger.Trigger();
-
-        State = new ServiceState(null, "Unknown");
     }
 
-    public ServiceState State
+    
+    public void ClearCache()
     {
-        get { return _state; }
-        set
+        if (_cache is FileCache fileCache)
         {
-            if (SetField(ref _state, value))
-            {
-                var eventType = typeof(ServiceStateChangedArgs<>).MakeGenericType(typeof(IAzureService));
-                var args = Activator.CreateInstance(eventType, _state);
-                _broadcastService.Broadcast(eventType, args);
-            }
+            fileCache.Clear();
+            _cacheRepository?.Cleanup();
         }
-    }
 
-    protected override void OnPropertyChanged(string propertyName = null)
-    {
-        Application.Current.Dispatcher.Postpone(() => base.OnPropertyChanged(propertyName));
+        _applySettingsTrigger.Trigger();
+        _broadcastService.Broadcast(new RefreshBranchesArgs());
     }
 
     public IEnumerable<AzureItem> GetItems(IEnumerable<int> ids)
@@ -135,24 +121,12 @@ public class AzureService : BaseNotifyPropertyChanged,
     {
         _applySettingsTrigger.Trigger();
     }
-
-    public void Dispose()
-    {
-        _broadcastService.Unsubscribe<SettingsChangedArgs<AzureSettings>>(OnSettingsChanged);
-        _cacheRepository?.Dispose();
-        _applySettingsTrigger.Dispose();
-        _itemsResolveRequiredTrigger.Dispose();
-    }
-
+    
     private void OnApplySettingsTrigger(object sender, EventArgs e)
     {
         var settings = _settingsService.GetSettings<AzureSettings>();
         var validationResult = Async.Run(async () => await _settingsValidator.ValidateAsync(settings));
-
-        State = validationResult.IsValid
-            ? new ServiceState(true, "Settings are valid")
-            : new ServiceState(false, string.Join(Environment.NewLine, validationResult.Errors.Select(error => error.ErrorMessage)));
-
+        
         if (validationResult.IsValid)
         {
             _cacheRepository = new DefaultRepository(settings.CacheDirectory, false);
@@ -223,6 +197,7 @@ public class AzureService : BaseNotifyPropertyChanged,
                 State = TryGetField(item.Fields, AzureFields.SYSTEM_STATE)?.ToString(),
                 Title = TryGetField(item.Fields, AzureFields.SYSTEM_TITLE)?.ToString(),
                 Release = TryGetField(item.Fields, AzureFields.CUSTOM_RELEASE)?.ToString(),
+                Hotfix = TryGetField(item.Fields, AzureFields.CUSTOM_HOTFIX)?.ToString(),
                 ParentId = parentId,
                 Type = type,
                 Uri = TryGetLink(item.Links.Links, AzureLinks.HTML),
@@ -254,6 +229,7 @@ public class AzureService : BaseNotifyPropertyChanged,
             AzureFields.SYSTEM_TITLE,
             AzureFields.SYSTEM_STATE,
             AzureFields.CUSTOM_RELEASE,
+            AzureFields.CUSTOM_HOTFIX,
             AzureFields.SYSTEM_PARENT,
             AzureFields.SYSTEM_WORK_ITEM_TYPE,
         };
@@ -276,7 +252,7 @@ public class AzureService : BaseNotifyPropertyChanged,
         }
 
         result.AddRange(workItems);
-
+        
         return result;
     }
 

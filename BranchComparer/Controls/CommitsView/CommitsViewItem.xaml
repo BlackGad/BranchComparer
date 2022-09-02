@@ -3,7 +3,7 @@
                     xmlns:controls="clr-namespace:BranchComparer.Controls.CommitsView">
 
     <ControlTemplate x:Key="{x:Static controls:CommitsViewItem+Resource.ControlTemplate}" TargetType="controls:CommitsViewItem">
-        <Grid Margin="0,3,0,0">
+        <Grid Margin="0,3,0,0" Focusable="False">
             <ContentPresenter />
         </Grid>
     </ControlTemplate>

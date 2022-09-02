@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using BranchComparer.Git.Settings;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services.GitService;
@@ -14,7 +15,7 @@ namespace BranchComparer.Providers;
 [DependencyRegisterAsSelf]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
 [DependencyAutoActivate]
-internal class AvailableBranchesProvider : IDisposable
+internal class AvailableBranchesProvider
 {
     private readonly IBroadcastService _broadcastService;
     private readonly IGitService _gitService;
@@ -30,21 +31,14 @@ internal class AvailableBranchesProvider : IDisposable
         _modelResolverService = modelResolverService;
         _broadcastService = broadcastService;
 
-        _broadcastService.Subscribe<ServiceStateChangedArgs<IGitService>>(OnGitServiceStateChanged);
+        _broadcastService.Subscribe<SettingsChangedArgs<GitSettings>>(OnGitSettingsChanged);
 
         _updateModelsTrigger = ThrottlingTrigger.Setup()
                                                 .Throttle(TimeSpan.FromMilliseconds(100))
                                                 .Subscribe<EventArgs>(OnUpdateModelsTriggered)
                                                 .Create()
                                                 .Activate();
-        UpdateAvailableBranches();
-
         _updateModelsTrigger.Trigger();
-    }
-
-    public void Dispose()
-    {
-        _broadcastService.Unsubscribe<ServiceStateChangedArgs<IGitService>>(OnGitServiceStateChanged);
     }
 
     private void OnUpdateModelsTriggered(object sender, EventArgs e)
@@ -61,18 +55,19 @@ internal class AvailableBranchesProvider : IDisposable
 
         Application.Current.Dispatcher.Postpone(() =>
         {
-            var collection = _modelResolverService.Collection(Regions.AVAILABLE_BRANCHES);
+            var collection = _modelResolverService.Collection(ModelRegions.AVAILABLE_BRANCHES);
             collection.Clear();
             collection.AddRange(availableBranches);
+
+            var args = new ModelsUpdatedArgs(new[]
+            {
+                ModelRegions.AVAILABLE_BRANCHES,
+            });
+            _broadcastService.Broadcast(args);
         });
     }
 
-    private void OnGitServiceStateChanged(ServiceStateChangedArgs<IGitService> args)
-    {
-        UpdateAvailableBranches();
-    }
-
-    private void UpdateAvailableBranches()
+    private void OnGitSettingsChanged(SettingsChangedArgs<GitSettings> args)
     {
         _updateModelsTrigger.Trigger();
     }

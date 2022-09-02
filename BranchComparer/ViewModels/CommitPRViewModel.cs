@@ -29,7 +29,7 @@ public class CommitPRViewModel : BaseNotifyPropertyChanged,
     {
         try
         {
-            var uri = _gitService.GetPRItemUri(Id);
+            var uri = _gitService.GetPullRequestUri(Id);
             var process = new Process();
             process.StartInfo.UseShellExecute = true;
             process.StartInfo.FileName = uri.AbsoluteUri;

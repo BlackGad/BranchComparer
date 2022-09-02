@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using BranchComparer.Components.CherryPick;
 using BranchComparer.ViewModels;
 using PS.IoC.Attributes;
@@ -31,6 +32,11 @@ public partial class CommitView : IView<CommitViewModel>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         CherryPickAdapter.RaiseRegisterEvent(this);
+    }
+
+    private void Popup_OnMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
     }
 
     private void BringCherryPickToView()

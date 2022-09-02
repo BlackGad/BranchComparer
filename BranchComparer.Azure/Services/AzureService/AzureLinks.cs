@@ -2,6 +2,6 @@
 
 internal static class AzureLinks
 {
-    public const string SELF = "self";
     public const string HTML = "html";
+    public const string SELF = "self";
 }

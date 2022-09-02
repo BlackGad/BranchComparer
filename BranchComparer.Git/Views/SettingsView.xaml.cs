@@ -2,28 +2,19 @@
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
 
-namespace BranchComparer.Git.Views
+namespace BranchComparer.Git.Views;
+
+[DependencyRegisterAsSelf]
+[DependencyRegisterAsInterface(typeof(IView<SettingsViewModel>))]
+public partial class SettingsView : IView<SettingsViewModel>
 {
-    [DependencyRegisterAsSelf]
-    [DependencyRegisterAsInterface(typeof(IView<SettingsViewModel>))]
-    public partial class SettingsView : IView<SettingsViewModel>
+    public SettingsView()
     {
-        #region Constructors
+        InitializeComponent();
+    }
 
-        public SettingsView()
-        {
-            InitializeComponent();
-        }
-
-        #endregion
-
-        #region Properties
-
-        public SettingsViewModel ViewModel
-        {
-            get { return DataContext as SettingsViewModel; }
-        }
-
-        #endregion
+    public SettingsViewModel ViewModel
+    {
+        get { return DataContext as SettingsViewModel; }
     }
 }

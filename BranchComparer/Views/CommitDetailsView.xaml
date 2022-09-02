@@ -1,0 +1,74 @@
+﻿<ContentControl x:Class="BranchComparer.Views.CommitDetailsView"
+                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                xmlns:ps="http://schemas.ps.com/2019/xaml"
+                xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+                xmlns:viewModels="clr-namespace:BranchComparer.ViewModels"
+                d:DataContext="{d:DesignInstance viewModels:CommitDetailsViewModel}"
+                Focusable="False"
+                mc:Ignorable="d">
+
+    <ContentControl.Resources>
+        <Style x:Key="RunTitleStyle" TargetType="Run">
+            <Setter Property="FontFamily" Value="{theme:Font Strong}" />
+            <Setter Property="Foreground" Value="{theme:Brush Accent}" />
+        </Style>
+    </ContentControl.Resources>
+
+    <FlowDocumentScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+        <FlowDocument Foreground="{theme:Brush MainForeground}"
+                      FontFamily="{theme:Font Normal}"
+                      FontSize="{theme:FontSize M}"
+                      LineHeight="0.1"
+                      TextAlignment="Left">
+            <Table>
+                <Table.Columns>
+                    <TableColumn Width="120" />
+                    <TableColumn />
+                </Table.Columns>
+                <TableRowGroup>
+                    <TableRow>
+                        <TableCell>
+                            <Paragraph><Run Style="{StaticResource RunTitleStyle}" Text="Sha:" /></Paragraph>
+                        </TableCell>
+                        <TableCell>
+                            <Paragraph><Run Text="{Binding Commit.Id, Mode=OneWay}" /></Paragraph>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>
+                            <Paragraph><Run Style="{StaticResource RunTitleStyle}" Text="Author:" /></Paragraph>
+                        </TableCell>
+                        <TableCell>
+                            <Paragraph><Run Text="{Binding Commit.Author, Mode=OneWay}" /></Paragraph>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>
+                            <Paragraph><Run Style="{StaticResource RunTitleStyle}" Text="Created:" /></Paragraph>
+                        </TableCell>
+                        <TableCell>
+                            <Paragraph><Run Text="{Binding Commit.AuthorTime, Mode=OneWay, Converter={x:Static ps:StringConverters.Format}, ConverterParameter={}{0:u}}" /></Paragraph>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>
+                            <Paragraph><Run Style="{StaticResource RunTitleStyle}" Text="Committed:" /></Paragraph>
+                        </TableCell>
+                        <TableCell>
+                            <Paragraph><Run Text="{Binding Commit.CommitterTime, Mode=OneWay, Converter={x:Static ps:StringConverters.Format}, ConverterParameter={}{0:u}}" /></Paragraph>
+                        </TableCell>
+                    </TableRow>
+                </TableRowGroup>
+            </Table>
+            <Paragraph>
+                <LineBreak />
+                <Run Style="{StaticResource RunTitleStyle}" Text="Message:" />
+                <LineBreak />
+                <Run Text="{Binding Commit.Message, Mode=OneWay}" />
+            </Paragraph>
+        </FlowDocument>
+    </FlowDocumentScrollViewer>
+</ContentControl>

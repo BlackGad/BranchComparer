@@ -103,7 +103,7 @@ public partial class App
             var config = new LoggingConfiguration();
             var debuggerTarget = new DebuggerTarget("target")
             {
-                Layout = "${time} ${uppercase:${level}}(${callsite}) - ${message} ${exception:format=tostring}"
+                Layout = "${time} ${uppercase:${level}}(${callsite}) - ${message} ${exception:format=tostring}",
             };
             config.AddTarget(debuggerTarget);
             config.AddRuleForAllLevels(debuggerTarget); // all to debugger
@@ -147,7 +147,7 @@ public partial class App
                 InfoAction = message => _logger.Info(message),
                 WarnAction = message => _logger.Warn(message),
                 ErrorAction = message => _logger.Error(message),
-                FatalAction = message => _logger.Fatal(message)
+                FatalAction = message => _logger.Fatal(message),
             };
 
             _bootstrapper = new Bootstrapper(bootstrapperLogger);
@@ -155,6 +155,22 @@ public partial class App
         catch (Exception e)
         {
             FatalShutdown(e, "Bootstrapper cannot be created");
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        base.OnExit(e);
+
+        if (_bootstrapper == null) return;
+
+        try
+        {
+            _bootstrapper.Dispose();
+        }
+        catch
+        {
+            //Nothing 
         }
     }
 
@@ -182,22 +198,6 @@ public partial class App
         catch (Exception exception)
         {
             FatalShutdown(exception, "Application failed");
-        }
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        base.OnExit(e);
-
-        if (_bootstrapper == null) return;
-
-        try
-        {
-            _bootstrapper.Dispose();
-        }
-        catch
-        {
-            //Nothing 
         }
     }
 
@@ -230,7 +230,7 @@ public partial class App
                                    .ShowModalAsync(new NotificationViewModel
                                    {
                                        Title = notificationException.Title ?? "Error",
-                                       Content = message
+                                       Content = message,
                                    });
             }
             catch (Exception exception)

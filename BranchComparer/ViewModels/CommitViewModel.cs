@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows;
 using Autofac;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
@@ -11,18 +12,20 @@ using PS.IoC.Attributes;
 using PS.MVVM.Patterns.Aware;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
+using PS.Patterns.Aware;
+using PS.WPF.Extensions;
 
 namespace BranchComparer.ViewModels;
 
 [DependencyRegisterAsSelf]
 public class CommitViewModel : BaseNotifyPropertyChanged,
                                ILoadedAware,
-                               IUnloadedAware
+                               IUnloadedAware,
+                               IIsVisibleAware
 {
     private readonly IAzureService _azureService;
     private readonly IBroadcastService _broadcastService;
     private readonly ILifetimeScope _scope;
-
     private IReadOnlyList<CommitPRViewModel> _prs;
     private IReadOnlyList<CommitRelatedItemViewModel> _relatedItems;
 
@@ -33,14 +36,17 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
                            IAzureService azureService,
                            IBroadcastService broadcastService)
     {
-        Commit = commit;
-
-        CherryPicks = cherryPicks.Enumerate().ToArray();
-        IsCherryPickPart = CherryPicks.Any();
-
         _scope = scope;
         _azureService = azureService;
         _broadcastService = broadcastService;
+
+        Commit = commit;
+        CommitDetailsViewModel = _scope.Resolve<CommitDetailsViewModel>(TypedParameter.From(commit));
+
+        CherryPicks = cherryPicks.Enumerate().ToArray();
+        IsCherryPickPart = CherryPicks.Any();
+        IsVisible = true;
+
         RelatedItems = new ObservableCollection<CommitRelatedItemViewModel>();
 
         VisualizationSettings = settingsService.GetObservableSettings<VisualizationSettings>();
@@ -52,6 +58,8 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
     public IReadOnlyList<CommitCherryPick> CherryPicks { get; }
 
     public Commit Commit { get; }
+
+    public CommitDetailsViewModel CommitDetailsViewModel { get; }
 
     public bool IsCherryPickPart { get; }
 
@@ -69,6 +77,8 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
 
     public VisualizationSettings VisualizationSettings { get; }
 
+    public bool IsVisible { get; set; }
+
     public void Loaded()
     {
         _broadcastService.Subscribe<AzureItemsResolvedArgs>(OnAzureItemResolved);
@@ -84,7 +94,7 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
 
     private void OnAzureItemResolved(AzureItemsResolvedArgs args)
     {
-        UpdateRelatedItems(args.Items);
+        Application.Current.Dispatcher.Postpone(() => UpdateRelatedItems(args.Items));
     }
 
     private void UpdateRelatedItems(IEnumerable<AzureItem> items)

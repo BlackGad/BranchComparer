@@ -1,13 +1,16 @@
+using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using Autofac;
+using BranchComparer.Git.Settings;
 using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Events;
 using BranchComparer.Infrastructure.Services;
 using BranchComparer.Infrastructure.Services.GitService;
 using BranchComparer.Providers.WorkingBranchesProvider.CherryPickDetectors;
-using BranchComparer.Services.FilterService;
 using BranchComparer.Settings;
 using BranchComparer.ViewModels;
+using Microsoft.VisualStudio.Services.Common;
 using PS.Extensions;
 using PS.IoC.Attributes;
 using PS.MVVM.Services;
@@ -20,12 +23,11 @@ namespace BranchComparer.Providers.WorkingBranchesProvider;
 [DependencyRegisterAsSelf]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
 [DependencyAutoActivate]
-internal class WorkingBranchesProvider : IDisposable
+internal class WorkingBranchesProvider
 {
     private readonly IBroadcastService _broadcastService;
     private readonly IBusyService _busyService;
     private readonly IReadOnlyList<ICherryPickDetector> _cherryPickDetectors;
-    private readonly IFilterService _filterService;
     private readonly IGitService _gitService;
     private readonly IModelResolverService _modelResolverService;
     private readonly ILifetimeScope _scope;
@@ -38,7 +40,6 @@ internal class WorkingBranchesProvider : IDisposable
         ISettingsService settingsService,
         IGitService gitService,
         IBroadcastService broadcastService,
-        IFilterService filterService,
         IModelResolverService modelResolverService,
         IEnumerable<ICherryPickDetector> cherryPickDetectors)
     {
@@ -47,13 +48,12 @@ internal class WorkingBranchesProvider : IDisposable
         _settingsService = settingsService;
         _gitService = gitService;
         _broadcastService = broadcastService;
-        _filterService = filterService;
         _modelResolverService = modelResolverService;
         _cherryPickDetectors = cherryPickDetectors.Enumerate().ToList();
 
-        _broadcastService.Subscribe<ServiceStateChangedArgs<IGitService>>(GitServiceStateChanged);
-        _broadcastService.Subscribe<SettingsChangedArgs<FilterSettings>>(OnFilterSettingsChanged);
         _broadcastService.Subscribe<SettingsChangedArgs<BranchSettings>>(OnBranchSettingsChanged);
+        _broadcastService.Subscribe<SettingsChangedArgs<GitSettings>>(OnGitSettingsChanged);
+        _broadcastService.Subscribe<RefreshBranchesArgs>(OnRefreshBranches);
 
         _updateModelsTrigger = ThrottlingTrigger.Setup()
                                                 .Throttle(TimeSpan.FromMilliseconds(100))
@@ -61,15 +61,6 @@ internal class WorkingBranchesProvider : IDisposable
                                                 .Create()
                                                 .Activate();
         _updateModelsTrigger.Trigger();
-    }
-
-    void IDisposable.Dispose()
-    {
-        _broadcastService.Unsubscribe<ServiceStateChangedArgs<IGitService>>(GitServiceStateChanged);
-        _broadcastService.Unsubscribe<SettingsChangedArgs<FilterSettings>>(OnFilterSettingsChanged);
-        _broadcastService.Unsubscribe<SettingsChangedArgs<BranchSettings>>(OnBranchSettingsChanged);
-
-        _updateModelsTrigger.Dispose();
     }
 
     private void OnUpdateModelsTriggered(object sender, EventArgs e)
@@ -82,13 +73,13 @@ internal class WorkingBranchesProvider : IDisposable
 
         try
         {
-            var commitsFilterSettings = _settingsService.GetSettings<FilterSettings>();
+            var gitSettings = _settingsService.GetSettings<GitSettings>();
             var branchSettings = _settingsService.GetSettings<BranchSettings>();
 
             IReadOnlyList<Commit> leftCommits;
             IReadOnlyList<Commit> rightCommits;
 
-            if (commitsFilterSettings.ShowUniqueCommits)
+            if (gitSettings.ShowUniqueCommits)
             {
                 leftCommits = _gitService.GetCommits(branchSettings.Left, branchSettings.Right);
                 rightCommits = _gitService.GetCommits(branchSettings.Right, branchSettings.Left);
@@ -101,11 +92,8 @@ internal class WorkingBranchesProvider : IDisposable
 
             cherryPicks = DetectCherryPicks(leftCommits, rightCommits);
 
-            var leftEnvironmentCommits = TransformCommits(leftCommits, cherryPicks);
-            var rightEnvironmentCommits = TransformCommits(rightCommits, cherryPicks);
-
-            leftBranch = _filterService.FilterCommits(leftEnvironmentCommits, cherryPicks);
-            rightBranch = _filterService.FilterCommits(rightEnvironmentCommits, cherryPicks);
+            leftBranch = TransformCommits(leftCommits, cherryPicks).ToList();
+            rightBranch = TransformCommits(rightCommits, cherryPicks).ToList();
         }
         catch
         {
@@ -113,28 +101,68 @@ internal class WorkingBranchesProvider : IDisposable
             rightBranch = Array.Empty<CommitViewModel>();
             cherryPicks = Array.Empty<CommitCherryPick>();
         }
-        finally
+
+        busyState.Title = "Rendering branches";
+        var dispatcher = Application.Current.Dispatcher;
+        dispatcher.SafeCall(() =>
         {
-            busyState.Dispose();
-        }
+            _modelResolverService.Collection(ModelRegions.LEFT_BRANCH).Clear();
+            _modelResolverService.Collection(ModelRegions.RIGHT_BRANCH).Clear();
 
-        Application.Current.Dispatcher.Postpone(() =>
-        {
-            _modelResolverService.Object(Regions.LEFT_BRANCH_COUNT).Value = leftBranch.Count;
-            _modelResolverService.Object(Regions.RIGHT_BRANCH_COUNT).Value = rightBranch.Count;
-
-            var leftBranchCollection = _modelResolverService.Collection(Regions.LEFT_BRANCH);
-            leftBranchCollection.Clear();
-            leftBranchCollection.AddRange(leftBranch);
-
-            var rightBranchCollection = _modelResolverService.Collection(Regions.RIGHT_BRANCH);
-            rightBranchCollection.Clear();
-            rightBranchCollection.AddRange(rightBranch);
-
-            var cherryPicksCollection = _modelResolverService.Collection(Regions.CHERRY_PICKS);
+            var cherryPicksCollection = _modelResolverService.Collection(ModelRegions.CHERRY_PICKS);
             cherryPicksCollection.Clear();
             cherryPicksCollection.AddRange(cherryPicks);
         });
+
+        var batchSize = 13;
+
+        using var leftBatchEnumerator = leftBranch.Batch(batchSize).GetEnumerator();
+        using var rightBatchEnumerator = rightBranch.Batch(batchSize).GetEnumerator();
+
+        while (true)
+        {
+            var leftAcquired = leftBatchEnumerator.MoveNext();
+            var rightAcquired = rightBatchEnumerator.MoveNext();
+            if (!leftAcquired && !rightAcquired)
+            {
+                break;
+            }
+
+            var leftBatch = leftAcquired ? leftBatchEnumerator.Current : Array.Empty<CommitViewModel>();
+            var rightBatch = rightAcquired ? rightBatchEnumerator.Current : Array.Empty<CommitViewModel>();
+
+            void UpdateBranchesBatch()
+            {
+                var leftBranchCollection = _modelResolverService.Collection(ModelRegions.LEFT_BRANCH);
+                leftBranchCollection.AddRange(leftBatch);
+
+                var rightBranchCollection = _modelResolverService.Collection(ModelRegions.RIGHT_BRANCH);
+                rightBranchCollection.AddRange(rightBatch);
+
+                var statusBuilder = new StringBuilder();
+                statusBuilder.AppendLine($"Left branch: {leftBranchCollection.Count}/{leftBranch.Count}");
+                statusBuilder.Append($"Right branch: {rightBranchCollection.Count}/{rightBranch.Count}");
+                busyState.Description = statusBuilder.ToString();
+            }
+
+            dispatcher.Postpone(DispatcherPriority.Background, UpdateBranchesBatch);
+        }
+
+        void NotifyModelsUpdateFinished()
+        {
+            var args = new ModelsUpdatedArgs(new[]
+            {
+                ModelRegions.LEFT_BRANCH,
+                ModelRegions.RIGHT_BRANCH,
+                ModelRegions.CHERRY_PICKS,
+            });
+
+            _broadcastService.Broadcast(args);
+
+            busyState.Dispose();
+        }
+
+        dispatcher.Postpone(DispatcherPriority.Background, NotifyModelsUpdateFinished);
     }
 
     private IReadOnlyList<CommitCherryPick> DetectCherryPicks(IReadOnlyList<Commit> leftEnvironmentCommits, IReadOnlyList<Commit> rightEnvironmentCommits)
@@ -145,17 +173,17 @@ internal class WorkingBranchesProvider : IDisposable
                .ToList();
     }
 
-    private void GitServiceStateChanged(ServiceStateChangedArgs<IGitService> args)
-    {
-        _updateModelsTrigger.Trigger();
-    }
-
     private void OnBranchSettingsChanged(SettingsChangedArgs<BranchSettings> obj)
     {
         _updateModelsTrigger.Trigger();
     }
 
-    private void OnFilterSettingsChanged(SettingsChangedArgs<FilterSettings> args)
+    private void OnGitSettingsChanged(SettingsChangedArgs<GitSettings> obj)
+    {
+        _updateModelsTrigger.Trigger();
+    }
+
+    private void OnRefreshBranches(RefreshBranchesArgs obj)
     {
         _updateModelsTrigger.Trigger();
     }
@@ -165,9 +193,7 @@ internal class WorkingBranchesProvider : IDisposable
         return commits.Select(c =>
         {
             var referencedCherryPicks = cherryPicks.Where(cherry => cherry.SourceId == c.Id || cherry.TargetId == c.Id);
-            return _scope.Resolve<CommitViewModel>(
-                TypedParameter.From(c),
-                TypedParameter.From(referencedCherryPicks));
+            return _scope.Resolve<CommitViewModel>(TypedParameter.From(c), TypedParameter.From(referencedCherryPicks));
         }).ToList();
     }
 }

@@ -1,8 +1,8 @@
-﻿using BranchComparer.Azure.Services.AzureService;
-using BranchComparer.Azure.Settings;
+﻿using BranchComparer.Azure.Settings;
+using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.AzureService;
 using Newtonsoft.Json;
-using PS;
 using PS.IoC.Attributes;
 using PS.MVVM.Patterns;
 using PS.Windows.Interop.Components;
@@ -12,36 +12,25 @@ namespace BranchComparer.Azure.ViewModels;
 
 [DependencyRegisterAsSelf]
 [JsonObject(MemberSerialization.OptIn)]
-public class SettingsViewModel : BaseNotifyPropertyChanged,
-                                 IViewModel
+public class SettingsViewModel : IViewModel
 {
-    private bool _isExpanded;
+    private readonly IAzureService _azureService;
+    private readonly IBusyService _busyService;
 
-    public SettingsViewModel(ISettingsService settingsService, AzureService azureService)
+    public SettingsViewModel(ISettingsService settingsService, IAzureService azureService, IBusyService busyService)
     {
-        AzureService = azureService;
-
-        _isExpanded = true;
+        _azureService = azureService;
+        _busyService = busyService;
 
         BrowseAzureCacheDirectoryCommand = new RelayUICommand(BrowseAzureCacheDirectory);
-        InvalidateAzureSettingsCommand = new RelayUICommand(InvalidateAzureSettings);
+        ClearCacheCommand = new RelayUICommand(ClearCache);
 
-        settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
         Settings = settingsService.GetObservableSettings<AzureSettings>();
     }
 
-    public AzureService AzureService { get; }
-
     public RelayUICommand BrowseAzureCacheDirectoryCommand { get; }
 
-    public RelayUICommand InvalidateAzureSettingsCommand { get; }
-
-    [JsonProperty]
-    public bool IsExpanded
-    {
-        get { return _isExpanded; }
-        set { SetField(ref _isExpanded, value); }
-    }
+    public RelayUICommand ClearCacheCommand { get; }
 
     public AzureSettings Settings { get; }
 
@@ -50,7 +39,7 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         var dialog = new OpenFolderDialog
         {
             DefaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            InitialFolder = Settings.CacheDirectory
+            InitialFolder = Settings.CacheDirectory,
         };
 
         if (dialog.ShowDialog())
@@ -59,8 +48,18 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         }
     }
 
-    private void InvalidateAzureSettings()
+    private async void ClearCache()
     {
-        AzureService.InvalidateSettings();
+        try
+        {
+            using (_busyService.Push("Clearing cache"))
+            {
+                await Task.Run(() => _azureService.ClearCache());
+            }
+        }
+        catch (Exception e)
+        {
+            throw new NotificationException("Cannot clear cache", e);
+        }
     }
 }

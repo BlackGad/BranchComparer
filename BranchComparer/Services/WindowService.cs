@@ -23,14 +23,6 @@ internal class WindowService : PS.MVVM.Services.WindowService.WindowService,
         _scope = scope;
     }
 
-    protected override void OnPreviewWindowShow<TViewModel>(Window window, TViewModel viewModel, string region)
-    {
-    }
-
-    protected override void OnWindowClose<TViewModel>(Window window, TViewModel viewModel, string region)
-    {
-    }
-
     protected override Window CreateWindow()
     {
         var result = new ChromelessWindow
@@ -44,6 +36,14 @@ internal class WindowService : PS.MVVM.Services.WindowService.WindowService,
     protected override IViewAssociation GetAssociation(Type consumerServiceType, Type viewModelType, string key)
     {
         return _viewResolverService.Find(consumerServiceType, viewModelType, key);
+    }
+
+    protected override void OnPreviewWindowShow<TViewModel>(Window window, TViewModel viewModel, string region)
+    {
+    }
+
+    protected override void OnWindowClose<TViewModel>(Window window, TViewModel viewModel, string region)
+    {
     }
 
     protected override object Resolve(Type type)

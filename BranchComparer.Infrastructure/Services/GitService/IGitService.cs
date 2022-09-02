@@ -6,7 +6,7 @@ public interface IGitService
 
     IReadOnlyList<Commit> GetCommits(string includeReachableFromBranchName, string excludeReachableFromBranchName);
 
-    Uri GetPRItemUri(int id);
+    Uri GetPullRequestUri(int id);
 
-    void InvalidateSettings();
+    void UpdateRemotes();
 }

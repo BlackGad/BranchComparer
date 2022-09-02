@@ -2,6 +2,7 @@
 
 internal static class AzureFields
 {
+    public const string CUSTOM_HOTFIX = "Custom.Hotfix";
     public const string CUSTOM_RELEASE = "Custom.Release_";
     public const string SYSTEM_ID = "System.Id";
     public const string SYSTEM_PARENT = "System.Parent";

@@ -9,9 +9,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="5.0.2" />
-		<PackageReference Include="PS.IoC.Autofac" Version="2.9.5" />
-		<PackageReference Include="PS.WPF" Version="2.9.5" />
+		<PackageReference Include="NLog" Version="5.0.4" />
+		<PackageReference Include="PS.IoC.Autofac" Version="9999.2209.1012.5842-Local" />
+		<PackageReference Include="PS.WPF" Version="9999.2209.1012.5842-Local" />
 	</ItemGroup>
 
 	<ItemGroup>

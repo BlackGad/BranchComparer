@@ -35,9 +35,6 @@
                 <ps:TitledObject Title="Any time" Payload="{x:Null}" />
             </ComboBox>
         </ps:HeaderedContent>
-        <ps:HeaderedContent Header="Show unique commits">
-            <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding Settings.ShowUniqueCommits}" />
-        </ps:HeaderedContent>
         <ps:HeaderedContent Header="Hide cherry picks">
             <ps:CheckBox VerticalAlignment="Center" IsChecked="{Binding Settings.ExcludeCherryPicks}" />
         </ps:HeaderedContent>

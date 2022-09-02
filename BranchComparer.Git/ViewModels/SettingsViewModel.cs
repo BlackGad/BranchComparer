@@ -1,6 +1,7 @@
-﻿using BranchComparer.Git.Services;
-using BranchComparer.Git.Settings;
+﻿using BranchComparer.Git.Settings;
+using BranchComparer.Infrastructure;
 using BranchComparer.Infrastructure.Services;
+using BranchComparer.Infrastructure.Services.GitService;
 using Newtonsoft.Json;
 using PS;
 using PS.IoC.Attributes;
@@ -15,42 +16,31 @@ namespace BranchComparer.Git.ViewModels;
 public class SettingsViewModel : BaseNotifyPropertyChanged,
                                  IViewModel
 {
-    private bool _isExpanded;
+    private readonly IBusyService _busyService;
+    private readonly IGitService _gitService;
 
-    public SettingsViewModel(ISettingsService settingsService, GitService gitService)
+    public SettingsViewModel(ISettingsService settingsService, IGitService gitService, IBusyService busyService)
     {
-        GitService = gitService;
-
-        _isExpanded = true;
-
+        _gitService = gitService;
+        _busyService = busyService;
         BrowseGitRepositoryFolderCommand = new RelayUICommand(BrowseGitRepositoryFolder);
-        InvalidateGitSettingsCommand = new RelayUICommand(InvalidateGitSettings);
+        UpdateRemoteCommand = new RelayUICommand(UpdateRemote);
 
-        settingsService.LoadPopulateAndSaveOnDispose(GetType().AssemblyQualifiedName, this);
         Settings = settingsService.GetObservableSettings<GitSettings>();
     }
 
     public RelayUICommand BrowseGitRepositoryFolderCommand { get; }
 
-    public GitService GitService { get; }
-
-    public RelayUICommand InvalidateGitSettingsCommand { get; }
-
-    [JsonProperty]
-    public bool IsExpanded
-    {
-        get { return _isExpanded; }
-        set { SetField(ref _isExpanded, value); }
-    }
-
     public GitSettings Settings { get; }
+
+    public RelayUICommand UpdateRemoteCommand { get; }
 
     private void BrowseGitRepositoryFolder()
     {
         var dialog = new OpenFolderDialog
         {
             DefaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            InitialFolder = Settings.RepositoryDirectory
+            InitialFolder = Settings.RepositoryDirectory,
         };
 
         if (dialog.ShowDialog())
@@ -59,8 +49,18 @@ public class SettingsViewModel : BaseNotifyPropertyChanged,
         }
     }
 
-    private void InvalidateGitSettings()
+    private async void UpdateRemote()
     {
-        GitService.InvalidateSettings();
+        try
+        {
+            using (_busyService.Push("Updating repository remotes"))
+            {
+                await Task.Run(() => _gitService.UpdateRemotes());
+            }
+        }
+        catch (Exception e)
+        {
+            throw new NotificationException("Cannot update remotes", e);
+        }
     }
 }

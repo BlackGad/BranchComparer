@@ -1,0 +1,65 @@
+﻿<ToggleButton x:Class="BranchComparer.Git.Views.StatusView"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+              xmlns:git="clr-namespace:BranchComparer.Git"
+              xmlns:infraResources="clr-namespace:BranchComparer.Infrastructure.Resources;assembly=BranchComparer.Infrastructure"
+              xmlns:infrastructure="clr-namespace:BranchComparer.Infrastructure;assembly=BranchComparer.Infrastructure"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+              xmlns:mvvm="http://schemas.ps.com/2019/xaml/mvvm"
+              xmlns:native="clr-namespace:PS.WPF.Controls.Native;assembly=PS.WPF"
+              xmlns:resources="clr-namespace:PS.WPF.Resources;assembly=PS.WPF"
+              xmlns:theme="http://schemas.ps.com/2021/xaml/theme"
+              xmlns:viewModels="clr-namespace:BranchComparer.Git.ViewModels"
+              x:Name="Root"
+              Margin="2,1,2,2"
+              Background="Transparent"
+              BorderThickness="0"
+              d:DataContext="{d:DesignInstance viewModels:StatusViewModel}"
+              Focusable="False"
+              Style="{StaticResource {x:Static native:ToggleButton.ToggleButtonStyle}}"
+              ToolTip="{Binding Status}"
+              mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <resources:SharedResourceDictionary Source="/BranchComparer.Git;component/XamlResources.xaml" />
+                <resources:SharedResourceDictionary Source="/PS.WPF;component/Controls/Native/ToggleButton.xaml" />
+                <resources:SharedResourceDictionary Source="/BranchComparer.Infrastructure;component/Resources/XamlResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </FrameworkElement.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Path Grid.Column="0"
+              Width="16"
+              VerticalAlignment="Center"
+              Data="{StaticResource {x:Static git:XamlResources.GitGeometry}}"
+              Fill="{Binding IsSettingsValid, Converter={StaticResource {x:Static infraResources:XamlResources.SettingsValidationStateColorConverter}}}"
+              Stretch="Uniform" />
+        <TextBlock Grid.Column="1"
+                   Margin="3,0,0,0"
+                   VerticalAlignment="Center"
+                   Text="Git" />
+        <Popup x:Name="Popup"
+               Grid.Column="0"
+               Width="500"
+               Height="400"
+               IsOpen="{Binding ElementName=Root, Path=IsChecked}"
+               Placement="Top"
+               PlacementTarget="{mvvm:ObjectModelResolver Region={x:Static infrastructure:VisualRegions.STATUS}}"
+               StaysOpen="False">
+            <Border Background="{theme:Brush Main}"
+                    BorderBrush="{theme:Brush MainBorder}"
+                    BorderThickness="1"
+                    MouseDown="UIElement_OnMouseDown"
+                    TextElement.Foreground="{theme:Brush MainForeground}">
+                <ContentControl ContentTemplateSelector="{mvvm:TemplateResolver}" Content="{Binding SettingsViewModel}" />
+            </Border>
+        </Popup>
+    </Grid>
+</ToggleButton>

@@ -31,7 +31,7 @@ internal class IoCDataTemplate<TView> : ViewHierarchicalDataTemplate,
             {
                 binding = new Binding
                 {
-                    Path = bindingPropertyPath
+                    Path = bindingPropertyPath,
                 };
             }
         }
