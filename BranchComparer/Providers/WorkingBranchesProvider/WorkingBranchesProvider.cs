@@ -53,7 +53,7 @@ internal class WorkingBranchesProvider
 
         _broadcastService.Subscribe<SettingsChangedArgs<BranchSettings>>(OnBranchSettingsChanged);
         _broadcastService.Subscribe<SettingsChangedArgs<GitSettings>>(OnGitSettingsChanged);
-        _broadcastService.Subscribe<RefreshBranchesArgs>(OnRefreshBranches);
+        _broadcastService.Subscribe<RequireRefreshBranchesArgs>(OnRefreshBranches);
 
         _updateModelsTrigger = ThrottlingTrigger.Setup()
                                                 .Throttle(TimeSpan.FromMilliseconds(100))
@@ -183,7 +183,7 @@ internal class WorkingBranchesProvider
         _updateModelsTrigger.Trigger();
     }
 
-    private void OnRefreshBranches(RefreshBranchesArgs obj)
+    private void OnRefreshBranches(RequireRefreshBranchesArgs obj)
     {
         _updateModelsTrigger.Trigger();
     }

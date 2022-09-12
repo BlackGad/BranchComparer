@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text;
 using System.Windows;
 using Autofac;
 using BranchComparer.Infrastructure.Events;
@@ -53,6 +54,14 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
 
         PRs = commit.MergedPRs.Select(i => _scope.Resolve<CommitPRViewModel>(TypedParameter.From(i))).ToList();
         RelatedItems = commit.RelatedItems.Select(i => _scope.Resolve<CommitRelatedItemViewModel>(TypedParameter.From(i))).ToList();
+
+        var indexBuilder = new StringBuilder();
+        indexBuilder.Append(commit.Message.ToLowerInvariant() + "|");
+        indexBuilder.Append(commit.Id.ToLowerInvariant() + "|");
+        indexBuilder.Append(commit.Author.ToLowerInvariant() + "|");
+        indexBuilder.Append(commit.Committer.ToLowerInvariant() + "|");
+
+        SearchIndex = indexBuilder.ToString();
     }
 
     public IReadOnlyList<CommitCherryPick> CherryPicks { get; }
@@ -74,6 +83,8 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
         get { return _relatedItems; }
         set { SetField(ref _relatedItems, value); }
     }
+
+    public string SearchIndex { get; }
 
     public VisualizationSettings VisualizationSettings { get; }
 
@@ -100,7 +111,10 @@ public class CommitViewModel : BaseNotifyPropertyChanged,
     private void UpdateRelatedItems(IEnumerable<AzureItem> items)
     {
         var resolveComparison = items.Compare(RelatedItems, item => item.Id.GetHash(), model => model.Id.GetHash());
-        resolveComparison.PresentInBoth.ForEach(t => t.Item2.ApplyResolvedInformation(t.Item1));
+        resolveComparison.PresentInBoth.ForEach(t =>
+        {
+            t.Item2.ApplyResolvedInformation(t.Item1);
+        });
 
         var taskParents = RelatedItems.Where(i => i.Type == AzureItemType.Task && i.ParentId.HasValue).Select(i => i.ParentId.Value);
         var taskParentsComparison = taskParents.Compare(RelatedItems, i => i.GetHash(), model => model.Id.GetHash());

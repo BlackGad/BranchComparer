@@ -92,7 +92,7 @@ public class AzureService : IAzureService
         }
 
         _applySettingsTrigger.Trigger();
-        _broadcastService.Broadcast(new RefreshBranchesArgs());
+        _broadcastService.Broadcast(new RequireRefreshBranchesArgs());
     }
 
     public IEnumerable<AzureItem> GetItems(IEnumerable<int> ids)

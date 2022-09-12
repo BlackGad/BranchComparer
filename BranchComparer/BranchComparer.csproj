@@ -10,8 +10,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="NLog" Version="5.0.4" />
-		<PackageReference Include="PS.IoC.Autofac" Version="9999.2209.1012.5842-Local" />
-		<PackageReference Include="PS.WPF" Version="9999.2209.1012.5842-Local" />
+		<PackageReference Include="PS.IoC.Autofac" Version="2.9.11" />
+		<PackageReference Include="PS.WPF" Version="2.9.11" />
 	</ItemGroup>
 
 	<ItemGroup>

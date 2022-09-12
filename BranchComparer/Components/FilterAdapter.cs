@@ -6,6 +6,7 @@ using PS.MVVM.Components;
 using PS.MVVM.Services;
 using PS.MVVM.Services.Extensions;
 using PS.Patterns.Aware;
+using PS.Threading.ThrottlingTrigger;
 using PS.WPF.Extensions;
 
 namespace BranchComparer.Components;
@@ -14,11 +15,17 @@ namespace BranchComparer.Components;
 public class FilterAdapter : Adapter<ItemsControl>
 {
     private readonly HashSet<ItemsControl> _containers;
+    private readonly ThrottlingTrigger _refreshContainerFilterTrigger;
 
     public FilterAdapter(IBroadcastService broadcastService)
     {
-        broadcastService.Subscribe<RefreshBranchFilterViewsArgs>(OnRefreshBranchFilter);
+        broadcastService.Subscribe<RequireRefreshBranchFilterViewsArgs>(OnRefreshBranchFilter);
         _containers = new HashSet<ItemsControl>();
+        _refreshContainerFilterTrigger = ThrottlingTrigger.Setup()
+                                                          .Throttle(TimeSpan.FromMilliseconds(100))
+                                                          .Subscribe<EventArgs>(OnRefreshContainerFilter)
+                                                          .Create()
+                                                          .Activate();
     }
 
     public override void Dispose()
@@ -28,13 +35,23 @@ public class FilterAdapter : Adapter<ItemsControl>
     protected override void OnAttach(ItemsControl container)
     {
         _containers.Add(container);
-
-        RefreshContainerFilter();
+        _refreshContainerFilterTrigger.Trigger();
     }
 
     protected override void OnDetach(ItemsControl container)
     {
         _containers.Remove(container);
+    }
+
+    private void OnRefreshContainerFilter(object sender, EventArgs e)
+    {
+        Application.Current.Dispatcher.Postpone(() =>
+        {
+            foreach (var container in _containers)
+            {
+                container.Items.Filter = ItemsFilter;
+            }
+        });
     }
 
     private bool ItemsFilter(object item)
@@ -47,19 +64,8 @@ public class FilterAdapter : Adapter<ItemsControl>
         return true;
     }
 
-    private void OnRefreshBranchFilter(RefreshBranchFilterViewsArgs args)
+    private void OnRefreshBranchFilter(RequireRefreshBranchFilterViewsArgs args)
     {
-        RefreshContainerFilter();
-    }
-
-    private void RefreshContainerFilter()
-    {
-        Application.Current.Dispatcher.SafeCall(() =>
-        {
-            foreach (var container in _containers)
-            {
-                container.Items.Filter = ItemsFilter;
-            }
-        });
+        _refreshContainerFilterTrigger.Trigger();
     }
 }

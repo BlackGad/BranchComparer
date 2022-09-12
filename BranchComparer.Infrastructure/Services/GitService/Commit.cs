@@ -4,6 +4,11 @@ namespace BranchComparer.Infrastructure.Services.GitService;
 
 public record Commit
 {
+    private static readonly IReadOnlyList<string> GarbageText = new[]
+    {
+        "feat(workplan):",
+    };
+
     public Commit(
         string id,
         string author,
@@ -18,29 +23,45 @@ public record Commit
         AuthorTime = authorTime;
         Committer = committer;
         CommitterTime = committerTime;
-        MessageShort = messageShort;
+
         Message = message.Trim('\r', '\n', '\t', ' ');
+        MessageShort = messageShort.Trim('\r', '\n', '\t', ' ');
 
-        RelatedItems = Regex.Matches(message, @"#([0-9]+)")
-                            .Where(m => m.Success)
-                            .Select(m => int.TryParse(m.Groups[1].Value, out var parsed) ? parsed : int.MaxValue)
-                            .Where(v => v != int.MaxValue)
-                            .Distinct()
-                            .ToList();
+        var relatedItemsMatches = Regex.Matches(message, @"#([0-9]+)")
+                                       .Where(m => m.Success)
+                                       .ToList();
+        RelatedItems = relatedItemsMatches
+                       .Select(m => int.TryParse(m.Groups[1].Value, out var parsed) ? parsed : int.MaxValue)
+                       .Where(v => v != int.MaxValue)
+                       .Distinct()
+                       .ToList();
 
-        MergedPRs = Regex.Matches(message, @"(Merged PR ([0-9]+):\s*)")
-                         .Where(m => m.Success)
-                         .Select(m => int.TryParse(m.Groups[2].Value, out var parsed) ? parsed : int.MaxValue)
-                         .Where(v => v != int.MaxValue)
-                         .Distinct()
-                         .ToList();
+        var mergedPRMatches = Regex.Matches(message, @"(Merged PR ([0-9]+):\s*)")
+                                   .Where(m => m.Success)
+                                   .ToList();
 
-        var extraCommitMatch = Regex.Match(message, @"^(Commit ([0-9a-fA-F]+):\s*)");
-        if (extraCommitMatch.Success)
+        MergedPRs = mergedPRMatches
+                    .Select(m => int.TryParse(m.Groups[2].Value, out var parsed) ? parsed : int.MaxValue)
+                    .Where(v => v != int.MaxValue)
+                    .Distinct()
+                    .ToList();
+
+        var extraCommitMatch = Regex.Matches(message, @"^(Commit ([0-9a-fA-F]+):\s*)")
+                                    .Where(m => m.Success)
+                                    .ToList();
+
+        var extraTextToDelete = Enumerable.Empty<string>()
+                                          .Union(GarbageText)
+                                          .Union(relatedItemsMatches.Select(m => m.Groups[0].Value))
+                                          .Union(mergedPRMatches.Select(m => m.Groups[1].Value))
+                                          .Union(extraCommitMatch.Select(m => m.Groups[1].Value));
+
+        MessageSanitized = MessageShort;
+        foreach (var extraText in extraTextToDelete)
         {
-            var value = extraCommitMatch.Groups[1].Value;
-            MessageShort = MessageShort.Replace(value, string.Empty);
+            MessageSanitized = MessageSanitized.Replace(extraText, string.Empty);
         }
+        MessageSanitized = MessageSanitized.Trim('\r', '\n', '\t', ' ');
     }
 
     public string Author { get; }
@@ -56,6 +77,8 @@ public record Commit
     public IReadOnlyList<int> MergedPRs { get; }
 
     public string Message { get; }
+
+    public string MessageSanitized { get; }
 
     public string MessageShort { get; }
 

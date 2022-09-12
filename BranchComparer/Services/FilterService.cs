@@ -42,6 +42,7 @@ internal class FilterService
     private void OnFilterRequiredTrigger(object sender, EventArgs e)
     {
         var settings = _settingsService.GetSettings<FilterSettings>();
+        var searchString = settings.Message.ToLowerInvariant();
 
         bool CalculateVisibility(CommitViewModel commit)
         {
@@ -58,16 +59,9 @@ internal class FilterService
                 visibility = visibility && commit.Commit.AuthorTime < untilTime;
             }
 
-            if (!string.IsNullOrEmpty(settings.Message))
+            if (!string.IsNullOrEmpty(searchString))
             {
-                var containsInParts = new[]
-                {
-                    commit.Commit.Message.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase),
-                    commit.Commit.Id.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase),
-                    commit.Commit.Author.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase),
-                    commit.Commit.Committer.Contains(settings.Message, StringComparison.InvariantCultureIgnoreCase),
-                };
-                visibility = visibility && containsInParts.Aggregate(false, (agg, value) => agg || value);
+                visibility = visibility && commit.SearchIndex.Contains(searchString);
             }
 
             return visibility;
@@ -93,7 +87,7 @@ internal class FilterService
                 changedCommit.Commit.IsVisible = changedCommit.Calculated;
             }
 
-            _broadcastService.Broadcast(new RefreshBranchFilterViewsArgs());
+            _broadcastService.Broadcast(new RequireRefreshBranchFilterViewsArgs());
         }
     }
 

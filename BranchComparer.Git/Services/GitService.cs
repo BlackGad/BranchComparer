@@ -114,6 +114,6 @@ public class GitService : IGitService
         var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
         repo.Network.Fetch(remote.Name, refSpecs, options);
 
-        _broadcastService.Broadcast(new RefreshBranchesArgs());
+        _broadcastService.Broadcast(new RequireRefreshBranchesArgs());
     }
 }

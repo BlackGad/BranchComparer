@@ -6,7 +6,7 @@ namespace BranchComparer.Providers.WorkingBranchesProvider.CherryPickDetectors;
 
 [DependencyRegisterAsInterface(typeof(ICherryPickDetector))]
 [DependencyLifetime(DependencyLifetime.InstanceSingle)]
-internal class ShortMessageCommitReferenceForm2Detector : ICherryPickDetector
+internal class MessageCommitReferenceForm2Detector : ICherryPickDetector
 {
     private static readonly Regex Regex = new(@"\(cherry picked from commit ([0-9a-fA-F]+)\)");
 
