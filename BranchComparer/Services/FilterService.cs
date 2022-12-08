@@ -42,7 +42,7 @@ internal class FilterService
     private void OnFilterRequiredTrigger(object sender, EventArgs e)
     {
         var settings = _settingsService.GetSettings<FilterSettings>();
-        var searchString = settings.Message.ToLowerInvariant();
+        var searchString = settings.Message?.ToLowerInvariant();
 
         bool CalculateVisibility(CommitViewModel commit)
         {
